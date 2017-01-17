@@ -1,0 +1,91 @@
+{% extends "shop/base.html" %}
+{% block title %}Keys and downloads{% endblock %}
+{% block body %}
+<h1>Keys and downloads</h1>
+{% if purchases %}
+{% for purchase in purchases %}
+<div class="panel panel-default">
+	<div class="panel-heading">
+		<div class="row">
+			<div class="col-sm-2">
+				DATE PURCHASED:<br>
+				{{ purchase.purchase.date|date:"F jS, Y"}}
+			</div>
+			<div class="col-sm-2">
+				PRICE:<br>
+				{{ purchase.gettotal|floatformat }} OK
+			</div>
+			<div class="col-sm-5">
+				PURCHASE ID:<br>
+				<a href="">{{ purchase.purchase.uuid }}</a>
+			</div>
+		</div>
+	</div>
+	<div class="panel-body">
+		<div class="col-md-2">
+			<img src="{{ purchase.product.productimage_set.first.image.url }}" alt="{{ purchase.product.product_name }}" class="img-responsive">
+		</div>
+		<div class="col-md-6">
+			<div class="product-name">
+				<a class="cart-product-name" href="{% url 'shop:viewproduct' purchase.product.id %}">{{ purchase.product }}</a> sold by {{purchase.product.seller}}
+			</div>
+			<div class="row">
+				{% if purchase.product.digitalfile_set.all %}
+				<div class="col-md-6">
+					<h3>Downloads</h3>
+					<ul>
+						{% for download in purchase.product.digitalfile_set.all %}
+						<li class="download"><a href="{{ download.file.url }}">{{ download.name }}</a> <em>{{ download.file.size|filesizeformat }}</em></li>
+						{% endfor %}
+					</ul>
+				</div>
+				{% endif %}
+				{% if purchase.product.digitalkeyset_set.all %}
+				<div class="col-md-6">
+					<h3>Keys</h3>
+					<ul>
+						{% for key in purchase.product.digitalkeyset_set.all %}
+						<li class="key"><a href="#" keyid="{{ key.id }}" purchaseid="{{ purchase.id }}" class="get-key btn btn-default">{{ key.name }}</a><div class="error" id="error-{{key.id}}"></div></li>
+						{% endfor %}
+					</ul>
+				</div>
+				{% endif %}
+			</div>
+		</div>
+		<div class="col-md-4">
+			<h3>Instructions:</h3>
+			<p class="description">{{purchase.product.redeeming_instructions}}</p>
+		</div>
+	</div>
+</div>
+{% endfor %}
+{% else %}
+You have no digital purchases! Go shopping and fill this list up!
+{% endif %}
+{% endblock %}
+{% block extrascripts %}
+<script>
+	$('.get-key').on('click', function(e) {
+		r = new XMLHttpRequest();
+		r.open('POST', '{% url 'shop:getkey' %}');
+		r.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+		r.send('purchaseid='+$(this).attr('purchaseid')+'&keyid='+$(this).attr('keyid'));
+		t = this;
+		r.onload = function(e) {
+			re = JSON.parse(r.responseText);
+			if (re.status == 'success') {
+				if (re.key.link) {
+					$(t).parent().append($('<a href="'+re.key.key+'" target="_blank">').text("This key is a link; Click here to redeem it!"));
+				} else {
+					$(t).parent().append($('<textarea class="form-control vresize" disabled>').val(re.key.key));
+				}
+				$(t).remove();
+			} else {
+				$('#error-'+$(t).attr('keyid')).text(re.errors);
+			}
+		}
+
+		e.preventDefault();
+	});
+</script>
+{% endblock %}

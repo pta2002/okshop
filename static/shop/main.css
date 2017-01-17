@@ -1,0 +1,32 @@
+.cart-product-name {
+	font-size: 2em;
+}
+
+.bold {
+	font-weight: bold;
+}
+
+.error {
+	color: red;
+}
+
+.wallet {
+	padding: 1em 10%;
+}
+
+.out-of-stock {
+	opacity: 0.5;
+}
+
+.out-of-stock:hover {
+	opacity: 1;
+}
+
+.vresize {
+	resize: vertical;
+}
+
+.hresize {
+	resize: horizontal;
+}
+/** TODO: FIX OVERFLOW */

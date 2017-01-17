@@ -1,0 +1,56 @@
+{% extends "shop/base.html" %}
+{% block title %}{{ product.product_name }}{% endblock %}
+
+{% block body %}
+<div class="row">
+	<div class="col-md-9">
+		<h1>{{ product.product_name }}</h1>
+		<div class="row">
+			<div class="col-md-3">
+				{% if product.productimage_set.count > 0 %}
+					{% for image in product.productimage_set.all %}
+					<img src="{{ image.image.url }}" class="img-responsive" alt="{{product}}">
+					{% endfor %}
+				{% endif %}
+			</div>
+			<div class="col-md-9">
+				{{ product.product_description }}
+			</div>
+		</div>
+	</div>
+	<div class="col-md-3">
+		<table class="table">
+			<tr>
+				<td>Price</td>
+				<td>{% if product.price > 0 %}{{product.price|floatformat}} OK{% else %}FREE :D{% endif %}</td>
+			</tr>
+			<tr>
+				<td>Type</td>
+				<td>{% if product.physical %}Physical{% else %}Digital{%endif%}</td>
+			</tr>
+			<tr>
+				<td>Stock</td>
+				<td>{% if product.unlimited_stock %}Unlimited{% else %}{{ product.stock }}{% endif %}</td>
+			</tr>
+			<tr>
+				<td>Seller</td>
+				<td><a href="{% url 'shop:shop' product.seller.username %}">{{product.seller}}</a></td>
+			</tr>
+		</table>
+		{% if can_buy %}
+		{% if not product.in_stock %}
+			<a href="#" disabled class="btn btn-primary btn-disabled btn-block">OUT OF STOCK</a>
+		{% else %}
+			{% if not incart %}
+			<a href="{% url 'shop:addtocart' product.id %}" class="btn {% if not user.is_authenticated %}btn-default{% else %}btn-primary{% endif %} btn-block">
+				{% if not user.is_authenticated %}LOGIN TO {% endif %}ADD TO CART</a>
+			{% else %}
+			<a href="#" disabled class="btn btn-primary btn-disabled btn-block">ALREADY IN CART</a>
+			{% endif %}
+		{% endif %}
+		{% else %}
+		<a href="#" disabled class="btn btn-primary btn-disabled btn-block">ALREADY OWNED</a>
+		{% endif %}
+	</div>
+</div>
+{% endblock %}

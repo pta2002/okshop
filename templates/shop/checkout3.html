@@ -1,0 +1,77 @@
+{% extends "shop/checkoutbase.html" %}
+{% block title %}Checkout Step 1{% endblock %}
+{% block body %}
+<div class="panel panel-default">
+	<div class="panel-body">
+		Please review your order. This is the final step in the checkout.
+		<hr>
+		<h2>Items</h2>
+		{% for product in checkout.cart.cartentry_set.all %}
+		{% if product.in_stock %}
+		<div class="panel panel-default">
+			<div class="panel-body">
+				<div class="row">
+					<div class="col-md-2">
+						<img src="{{ product.product.productimage_set.first.image.url }}" alt="" class="img-responsive">
+					</div>
+					<div class="col-md-10">
+						<div class="row">
+							<div class="col-md-7">
+								<div class="product-name">
+									<a class="cart-product-name" href="{% url 'shop:viewproduct' product.product.id %}">{{ product.product }}</a> sold by {{product.product.seller}}
+								</div>
+							</div>
+							<div class="col-md-5">
+								<div class="row">
+									<div class="col-md-6">
+										Price: <span class="price">{{ product.product.price|floatformat }} OK</span>
+									</div>
+									<div class="col-md-6">
+										Quant.: <span class="quantity">{{ product.quantity }}</span>
+									</div>
+								</div>
+								<div class="row">
+									<div class="subtotal col-sm-12">Subtotal: <span class="price">{{ product.gettotal|floatformat }} OK</span></div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		{% endif %}
+		{% endfor %}
+		<hr>
+		<h2>Paid by Wallet</h2>
+		<p>This order will be paid from the <strong>{{ checkout.wallet.label }}</strong> wallet, which currently has {{ checkout.wallet.get_balance|floatformat }} OK.</p>
+		<hr>
+		{% if checkout.shipping %}
+		<h2>Shipping Address</h2>
+		This order will be sent to {{ checkout.shipping.address1 }}, {{ checkout.shipping.state }}, {{ checkout.shipping.country }}.
+		<hr>
+		{% endif %}
+		<h2>Price breakdown</h2>
+		<h3>Items: {{ checkout.cart.gettotal|floatformat }} OK</h3>
+		{% for item in checkout.cart.cartentry_set.all %}
+		{% if item.in_stock %}
+		{{ item.quantity }}&times; {{ item.product.product_name }} ({{ item.product.price|floatformat }} OK) = <span class="price">{{ item.gettotal|floatformat }} OK</span>
+		{% endif %}
+		{% endfor %}
+		{% if checkout.shipping %}
+		<h3>Shipping: {{ checkout.get_shipping_price|floatformat }} OK</h3>
+		{% endif %}
+		<h3>Total: {{ checkout.get_price|floatformat }} OK</h3>
+	</div>
+	<div class="panel-footer">
+		<a href="{% url 'shop:cart' %}" class="btn btn-default">Cancel</a>
+		<div class="pull-right">
+			<form action="{% url 'shop:checkout' %}" method="POST">
+				{% csrf_token %}
+				<input type="hidden" value="{{checkout.uuid}}" name="checkout">
+				<input type="hidden" value="insert interesting text here" name="confirm">
+				<div class="col-sm-2"><input type="submit" class="btn btn-primary" value="Confirm checkout"></div>
+			</form>
+		</div>
+	</div>
+</div>
+{% endblock %}
