@@ -14,11 +14,12 @@ Yes, that's the best I can do, sorry ¯\_(ツ)_/¯
 	<meta charset="UTF-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-	<title>{% block title %}{% endblock %} | OKCash store</title>
+	<title>{% block title %}{% endblock %} | OKCart</title>
 	{% load static %}
 	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
 	<link rel="stylesheet" href="{% static 'shop/main.css' %}">
 	{% block customhead %}{% endblock %}
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
 </head>
 <body>
 	<nav class="navbar navbar-default navbar-static-top navbar-inverse">
@@ -30,7 +31,7 @@ Yes, that's the best I can do, sorry ¯\_(ツ)_/¯
 					<span class="icon-bar"></span>
 			   		<span class="icon-bar"></span>
 			    </button>
-				<a href="{% url 'shop:homepage' %}" class="navbar-brand">Store</a>
+				<a href="{% url 'shop:homepage' %}" class="navbar-brand">OKCart</a>
 			</div>
 			<div class="collapse navbar-collapse" id="navbar-collapse-1">
 				<ul class="nav navbar-nav navbar-right">
@@ -74,6 +75,11 @@ Yes, that's the best I can do, sorry ¯\_(ツ)_/¯
 	</div>
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
 	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+	<script>
+		$(document).ready(function(){
+		    $('[data-toggle="tooltip"]').tooltip(); 
+		});
+	</script>
 	{% block extrascripts %}{% endblock %}
 </body>
 </html>

@@ -31,7 +31,7 @@
 		</div>
 		<div class="col-md-10">
 			<div class="product-name">
-				<a class="cart-product-name" href="{% url 'shop:viewproduct' purchase.product.id %}">{{ purchase.product }}</a> sold by {{purchase.product.seller}}
+				<a class="cart-product-name" href="{% url 'shop:vieworder' purchase.id %}">{{ purchase.product }}</a> sold by {{purchase.product.seller}}
 			</div>
 			<div class="row">
 				<h4>LAST UPDATE ({{ purchase.get_last_update.date|date:"F jS, Y"}})</h4>

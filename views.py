@@ -441,4 +441,9 @@ def orders(request):
 
 @login_required
 def view_order(request, id):
-	pass
+	order = get_object_or_404(PurchaseItem, id=id, purchase__by=request.user)
+	if order.product.physical:
+		updates = order.shippingupdate_set.all().order_by('-date')
+		return render(request, 'shop/vieworder.html', {'order': order, 'updates': updates})
+	else:
+		raise Http404()
