@@ -6,14 +6,23 @@
 	<div class="col-md-9">
 		<h1>{{ product.product_name }}</h1>
 		<div class="row">
-			<div class="col-md-3">
+			<div class="col-md-4">
 				{% if product.productimage_set.count > 0 %}
-					{% for image in product.productimage_set.all %}
-					<img src="{{ image.image.url }}" class="img-responsive" alt="{{product}}">
-					{% endfor %}
+					<div class="pic-app row">
+					{% verbatim %}
+						<ul class="col-xs-2" style="padding: 0">
+							<li v-for="(pic,index) in pics" style="display: block;">
+								<a href="#" v-on:click="selected=index"><img :src="pic" class="img-thumbnail"></a>
+							</li>
+						</ul>
+						<div class="col-xs-10">
+							<img :src="pics[selected]" class="img-responsive">
+						</div>
+					</div>
+					{% endverbatim %}
 				{% endif %}
 			</div>
-			<div class="col-md-9">
+			<div class="col-md-8">
 				{{ product.product_description }}
 			</div>
 		</div>
@@ -53,4 +62,21 @@
 		{% endif %}
 	</div>
 </div>
+{% endblock %}
+{% block extrascripts %}
+{% load static %}
+<script src="{% static 'shop/vue.js' %}"></script>
+<script>
+	var app = new Vue({
+		el: '.pic-app',
+		data: {
+			pics: [
+			{% for image in product.productimage_set.all %}
+			"{{image.image.url}}",
+			{% endfor %}
+			],
+			selected: 0
+		}
+	});
+</script>
 {% endblock %}
