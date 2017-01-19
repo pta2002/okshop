@@ -447,3 +447,8 @@ def view_order(request, id):
 		return render(request, 'shop/vieworder.html', {'order': order, 'updates': updates})
 	else:
 		raise Http404()
+
+@login_required
+def view_purchase(request, uuid):
+	purchase = get_object_or_404(Purchase, uuid=uuid, by=request.user)
+	return render(request, 'shop/viewpurchase.html', {'purchase': purchase})

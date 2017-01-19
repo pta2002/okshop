@@ -311,6 +311,18 @@ class Purchase(models.Model):
 			s += item.price
 		return s
 
+	def get_item_price(self):
+		s = 0
+		for item in self.purchaseitem_set.all():
+			s += item.price
+		return s
+
+	def get_shipping_price(self):
+		s = 0
+		for item in self.purchaseitem_set.all():
+			s += item.shipping_price
+		return s
+
 	def get_number_of_items(self):
 		return self.purchaseitem_set.count()
 	get_number_of_items.short_description = 'number of items'

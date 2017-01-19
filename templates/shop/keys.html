@@ -17,7 +17,7 @@
 			</div>
 			<div class="col-sm-5">
 				PURCHASE ID:<br>
-				<a href="">{{ purchase.purchase.uuid }}</a>
+				<a href="{% url 'shop:purchase' purchase.purchase.uuid %}">{{ purchase.purchase.uuid }}</a>
 			</div>
 		</div>
 	</div>

@@ -1,9 +1,33 @@
 {% extends "shop/base.html" %}
-{% block title %}My purchases{% endblock %}
+{% block title %}Purchase details{% endblock %}
 {% block body %}
-<h1>Purchases</h1>
-{% if purchases %}
-{% for purchase in purchases %}
+<h1>Purchase details</h1>
+<div class="panel panel-default">
+	<div class="panel-body">
+		<div class="col-md-6">
+			{% if purchase.shipped_to %}
+			<h3>Shipped to</h3>
+			<div class="address">
+				{{ purchase.shipped_to.name }},<br>
+				{{ purchase.shipped_to.address1 }},<br>
+				{% if purchase.shipped_to.address2 %}
+				{{ purchase.shipped_to.address2 }},<br>
+				{% endif %}
+				{{ purchase.shipped_to.state }} {{ purchase.shipped_to.zipcode }},<br>
+				{{ purchase.shipped_to.country }}<br>
+			</div>
+			{% endif %}
+		</div>
+		<div class="col-md-6 text-right">
+			<h3>Price breakdown</h3>
+			Item price: {{ purchase.get_item_price|floatformat }} OK<br>
+			{% if purchase.shipped_to %}
+			Shipping price: {{ purchase.get_shipping_price|floatformat }} OK<br>
+			{% endif %}
+			Total price: {{ purchase.get_price|floatformat }} OK<br>
+		</div>
+	</div>
+</div>
 <div class="panel panel-default">
 	<div class="panel-heading">
 		<div class="row">
@@ -11,16 +35,6 @@
 				DATE PURCHASED:<br>
 				{{ purchase.date|date:"F jS, Y"}}
 			</div>
-			<div class="col-sm-2">
-				PRICE:<br>
-				{{ purchase.get_price|floatformat }} OK
-			</div>
-			{% if purchase.shipped_to %}
-			<div class="col-sm-3">
-				SHIPPED TO:<br>
-				{{ purchase.shipped_to }}
-			</div>
-			{% endif %}
 			<div class="col-sm-5">
 				PURCHASE ID:<br>
 				<a href="{% url 'shop:purchase' purchase.uuid %}">{{ purchase.uuid }}</a>
@@ -62,8 +76,4 @@
 		{% endfor %}
 	</div>
 </div>
-{% endfor %}
-{% else %}
-No purchases! Go shopping and fill this list up!
-{% endif %}
 {% endblock %}
