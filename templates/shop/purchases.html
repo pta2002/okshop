@@ -35,7 +35,7 @@
 			</div>
 			<div class="col-md-5">
 				<div class="product-name">
-					<a class="cart-product-name" href="{% url 'shop:viewproduct' item.product.id %}">{{ item.product }}</a> sold by {{item.product.seller}}
+					<a class="cart-product-name" href="{% if item.product.physical %}{% url 'shop:vieworder' item.id %}{% else %}{% url 'shop:viewproduct' item.product.id %}{% endif %}">{{ item.product }}</a> sold by {{item.product.seller}}
 				</div>
 			</div>
 			<div class="col-md-5">

@@ -40,6 +40,7 @@ Yes, that's the best I can do, sorry ¯\_(ツ)_/¯
 						<a href="#" role="button" id="dlabel" data-toggle="dropdown" class="dropdown-toggle" aria-haspopup="true" aria-expanded="false">{{ user.username }} <span class="caret"></span></a>
 						<ul class="dropdown-menu" aria-labelledby="dlabel">
 							<li><a href="{% url 'shop:shop' request.user.username %}">My shop</a></li>
+							<li><a href="{% url 'shop:dashboard' %}">Dashboard</a></li>
 							<li class="divider" role="separator"></li>
 							<li><a href="{% url 'shop:purchases' %}">Purchase history</a></li>
 							<li><a href="{% url 'shop:keys' %}">Keys and downloads</a></li>

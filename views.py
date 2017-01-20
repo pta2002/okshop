@@ -460,3 +460,7 @@ def download_file(request, id):
 		return sendfile(request, file.file.path, attachment=True, attachment_filename=file.get_file_name())
 	else:
 		return Http404()
+
+@login_required
+def dashboard(request):
+	return render(request, 'shop/dashboard.html')

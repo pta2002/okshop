@@ -90,6 +90,15 @@ class Product(models.Model):
 			self.save()
 			return PurchaseItem(product=self, gift=gift, price=self.price, quantity=ammount, shipping_price=self.get_shipping_price(address), address=address)
 
+	def get_earnings(self):
+		s = 0
+		for p in PurchaseItem.objects.filter(product=self):
+			s += p.price
+		return s
+
+	def get_purchases(self):
+		return PurchaseItem.objects.filter(product=self)
+
 
 class ShippingCountry(models.Model):
 	product = models.ForeignKey(Product)
@@ -422,6 +431,15 @@ class UserShop(models.Model):
 
 	def __str__(self):
 		return self.user.username
+
+	def get_earnings(self):
+		s = 0
+		for p in PurchaseItem.objects.filter(product__seller=self.user):
+			s += p.price
+		return s
+
+	def get_purchases(self):
+		return PurchaseItem.objects.filter(product__seller=self.user)
 
 class DigitalFile(models.Model):
 	file = models.FileField(upload_to=get_protected_file_path)
