@@ -452,3 +452,11 @@ def view_order(request, id):
 def view_purchase(request, uuid):
 	purchase = get_object_or_404(Purchase, uuid=uuid, by=request.user)
 	return render(request, 'shop/viewpurchase.html', {'purchase': purchase})
+
+@login_required
+def download_file(request, id):
+	file = get_object_or_404(DigitalFile, id=id)
+	if file.owned_by(request.user):
+		return sendfile(request, file.file.path, attachment=True, attachment_filename=file.get_file_name())
+	else:
+		return Http404()

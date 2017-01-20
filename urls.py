@@ -15,6 +15,7 @@ urlpatterns = [
 	url(r'^me/settings/$', views.my_settings, name='settings'),
 	url(r'^me/purchases/$', views.purchases, name='purchases'),
 	url(r'^me/purchases/keys/$', views.keys, name='keys'),
+	url(r'^me/purchases/keys/download/(?P<id>\d*[1-9]\d*)/$', views.download_file, name='download'),
 	url(r'^me/purchases/orders/$', views.orders, name='orders'),
 	url(r'^me/purchases/orders/(?P<id>\d*[1-9]\d*)/$', views.view_order, name='vieworder'),
 	url(r'^me/purchases/(?P<uuid>[A-Za-z0-9\-\_]{36})/$', views.view_purchase, name='purchase'),

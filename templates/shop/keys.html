@@ -35,7 +35,7 @@
 					<h3>Downloads</h3>
 					<ul>
 						{% for download in purchase.product.digitalfile_set.all %}
-						<li class="download"><a href="{{ download.file.url }}">{{ download.name }}</a> <em>{{ download.file.size|filesizeformat }}</em></li>
+						<li class="download"><a href="{% url 'shop:download' download.id %}">{{ download.name }}</a> <em>{{ download.file.size|filesizeformat }}</em></li>
 						{% endfor %}
 					</ul>
 				</div>

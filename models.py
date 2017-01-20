@@ -432,6 +432,12 @@ class DigitalFile(models.Model):
 	def __str__(self):
 		return '%s: %s' % (self.product.product_name, self.name)
 
+	def owned_by(self, u):
+		return PurchaseItem.objects.filter(purchase__by=u, product=self.product).count() > 0
+
+	def get_file_name(self):
+		return self.name.lower().replace(' ', '_') + '.' + self.file.path.split('.')[-1]
+
 class DigitalKeySet(models.Model):
 	product = models.ForeignKey(Product)
 	name = models.CharField(max_length=200, default='', null=True, blank=True)
