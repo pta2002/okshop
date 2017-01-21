@@ -63,6 +63,7 @@ class UserExtraAdmin(admin.ModelAdmin):
 		('User info', {'fields': ['user']}),
 		('Moderation', {'fields': ['verified']}),
 		('Wallet', {'fields': [('get_balance', 'get_pending')]}),
+		('2FA', {'fields': [('authenticator_id', 'authenticator_verified')]}),
 	]
 
 

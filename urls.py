@@ -13,6 +13,8 @@ urlpatterns = [
 	url(r'^me/shop/edit/$', views.editshop, name='editshop'),
 	url(r'^me/wallets/$', views.wallets, name='wallets'),
 	url(r'^me/settings/$', views.my_settings, name='settings'),
+	url(r'^me/settings/2fa/$', views.auth_settings, name='2fasettings'),
+	url(r'^me/settings/2fa/google/$', views.google_settings, name='googlesettings'),
 	url(r'^me/purchases/$', views.purchases, name='purchases'),
 	url(r'^me/purchases/keys/$', views.keys, name='keys'),
 	url(r'^me/purchases/keys/download/(?P<id>\d*[1-9]\d*)/$', views.download_file, name='download'),
@@ -29,4 +31,5 @@ urlpatterns = [
 	url(r'^api/wallets/checkaddress/$', views.api_checkaddress, name='apicheckaddress'),
 	url(r'^api/wallets/send/$', views.api_send, name='apisend'),
 	url(r'^api/keys/get/$', views.get_key, name='getkey'),
+	url(r'^api/qrcode/$', views.qr_code, name='qrcode'),
 ]

@@ -5,6 +5,8 @@ This is a cryptocurrency shop originally made for the [OKCash](https://okcash.co
  - Django
  - django-countries
  - django-sendfile
+ - pyotp
+ - qrcode
  
 This app also requires a running OKCash daemon.
 

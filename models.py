@@ -187,6 +187,9 @@ class UserExtra(models.Model):
 	user = models.OneToOneField(User)
 	verified = models.BooleanField(default=False)
 
+	authenticator_id = models.CharField(max_length=16, default='', null=True, blank=True)
+	authenticator_verified = models.BooleanField(default=False)
+
 	def authorize(self, forid):
 		a = Authorization(user=self.user, allowto=forid)
 		a.save()

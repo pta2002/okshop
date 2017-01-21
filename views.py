@@ -5,13 +5,14 @@ from django.contrib.auth import logout, authenticate, login
 from django.contrib import messages
 from django.http import HttpResponse, JsonResponse, Http404
 from django.template import defaultfilters as df
+from django.conf import settings
 from django_countries import countries
 from decimal import Decimal
 from sendfile import sendfile
 from .models import *
 from .decorators import *
 from . import cryptomethods as cm
-import re, json
+import re, json, qrcode, pyotp
 
 # Create your views here.
 def view_product(request, id):
@@ -67,25 +68,59 @@ def login_view(request):
 					ue = UserExtra(user=user)
 					ue.save()
 				if user.userextra.verified:
-					login(request, user)
-					messages.success(request, "Welcome back, %s!" % user.username)
+					if not user.userextra.authenticator_verified:
+						login(request, user)
+						messages.success(request, "Welcome back, %s!" % user.username)
 
-					# If user has no cart, give them one.
-					if not hasattr(user, 'cart'):
-						cart = Cart(user=user)
-						cart.save()
-					if user.wallet_set.count() <= 0:
-						w = Wallet(label='default', user=user)
-						w.save()
-					if 'next' in request.GET and request.GET['next'] != '':
-						return redirect(request.GET['next'])
+						# If user has no cart, give them one.
+						if not hasattr(user, 'cart'):
+							cart = Cart(user=user)
+							cart.save()
+						if user.wallet_set.count() <= 0:
+							w = Wallet(label='default', user=user)
+							w.save()
+						if 'next' in request.GET and request.GET['next'] != '':
+							return redirect(request.GET['next'])
+						else:
+							return redirect('/')
 					else:
-						return redirect('/')
+						request.session['user_awaiting_2fa'] = user.id
+						return render(request, 'shop/login_authenticator.html')
 				else:
 					messages.warning(request, "Email hasn't been verified yet! A new verification email has been sent.")
 					send_confirmation_email(user)
 			else:
 				messages.warning(request, 'Invalid username/password!')
+		elif 'authcode' in request.POST and 'user_awaiting_2fa' in request.session:
+			try:
+				user = User.objects.get(id=request.session['user_awaiting_2fa'])
+				if user.userextra.authenticator_verified:
+					totp = pyotp.TOTP(user.userextra.authenticator_id)
+					if totp.verify(int(request.POST['authcode'])):
+						del request.session['user_awaiting_2fa']
+						login(request, user)
+						messages.success(request, "Welcome back, %s!" % user.username)
+
+						# If user has no cart, give them one.
+						if not hasattr(user, 'cart'):
+							cart = Cart(user=user)
+							cart.save()
+						if user.wallet_set.count() <= 0:
+							w = Wallet(label='default', user=user)
+							w.save()
+						if 'next' in request.GET and request.GET['next'] != '':
+							return redirect(request.GET['next'])
+						else:
+							return redirect('/')
+					else:
+						messages.warning(request, "Incorrect 2FA code.")
+						return render(request, 'shop/login_authenticator.html')
+				else:
+					messages.warning(request, "This shouldn't happen... Try again.")
+					return render(request, 'shop/login_authenticator.html')
+			except:
+				messages.warning(request, "Incorrect 2FA code.")
+				return render(request, 'shop/login_authenticator.html')
 
 	return render(request, 'shop/login.html')
 
@@ -464,3 +499,42 @@ def download_file(request, id):
 @login_required
 def dashboard(request):
 	return render(request, 'shop/dashboard.html')
+
+def qr_code(request):
+	t = request.GET.get('text', '')
+	img = qrcode.make(t)
+	response = HttpResponse(content_type="image/png")
+	img.save(response, "PNG")
+	return response
+
+
+@login_required
+@auth_required(forid='2fa')
+def auth_settings(request):
+	return render(request, 'shop/2fa_settings.html')
+
+@login_required
+@auth_required(forid='2fa')
+def google_settings(request):
+	args = {}
+	if request.method == 'POST':
+		if 'authcode' in request.POST and request.user.userextra.authenticator_id:
+			totp = pyotp.TOTP(request.user.userextra.authenticator_id)
+			try:
+				authcode = int(request.POST['authcode'])
+				if totp.verify(authcode):
+					request.user.userextra.authenticator_verified = True
+					request.user.userextra.save()
+					messages.success(request, "Successfully added google authenticator!")
+				else:
+					messages.warning(request, "Your code doesn't seem right... Double check it!")
+			except:
+				messages.warning(request, "Your code doesn't seem right... Double check it!")
+
+	if not request.user.userextra.authenticator_verified:
+		request.user.userextra.authenticator_id = pyotp.random_base32()
+		request.user.userextra.save()
+
+	totp = pyotp.TOTP(request.user.userextra.authenticator_id)
+	args['code'] = totp.provisioning_uri("OKCart: %s" % request.user.username)
+	return render(request, 'shop/google_auth.html', args)
