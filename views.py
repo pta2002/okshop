@@ -424,7 +424,7 @@ def authorize(request, forid):
 	return render(request, 'shop/confirmpassword.html')
 
 
-@login_requiredd 
+@login_required
 def purchases(request):
 	all_purchases = request.user.purchase_set.all().order_by('-date')
 	return render(request, 'shop/purchases.html', {'purchases': all_purchases})
