@@ -32,7 +32,7 @@ class ProductAdmin(admin.ModelAdmin):
 	list_display = ('product_name', 'seller', 'price', 'stock', 'physical', 'approved')
 	list_filter = ('approved', 'physical','worldwide_shipping','free_shipping')
 	fieldsets = (
-		('Product info', {'fields': ('product_name', 'product_description', 'price', 'seller')}),
+		('Product info', {'fields': ('product_name', 'product_description', ('price', 'price_currency', 'cached_rate'), 'seller')}),
 		('Moderation', {'fields': ('approved',)}),
 		('Shipping/Delivery', {'fields': (('stock', 'physical'), ('ships_from', 'worldwide_shipping'), ('local_price', 'outside_price', 'free_shipping'))}),
 		('Digital', {'fields': ('redeeming_instructions',('unlimited_stock','can_purchase_multiple'))})

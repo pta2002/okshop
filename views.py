@@ -256,7 +256,7 @@ def api_send(request):
 			except:
 				errors.append('Wallet not found')
 		except:
-			errors.append('Invalid ammount___')
+			errors.append('Invalid ammount')
 	else:
 		errors.append('Malformed request')
 
@@ -359,10 +359,12 @@ def checkout(request):
 			for address in request.user.wallet_set.filter(active=True):
 				if address.get_balance() >= chkout.get_price():
 					addresses.append(address)
+			print(addresses, len(addresses), chkout.step)
 
 		if chkout.step == 1 and len(addresses) == 1:
 			chkout.step = 2
 			chkout.wallet = addresses[0]
+			print(chkout.wallet)
 		elif chkout.step == 1 and len(addresses) == 0:
 			messages.warning(request, "Not enough balance!")
 			return redirect("shop:cart")
@@ -564,3 +566,7 @@ def google_settings(request):
 	totp = pyotp.TOTP(request.user.userextra.authenticator_id)
 	args['code'] = totp.provisioning_uri("OKCart: %s" % request.user.username)
 	return render(request, 'shop/google_auth.html', args)
+
+@login_required
+def sell_new_product(request):
+	return render(request, 'shop/newproduct.html')

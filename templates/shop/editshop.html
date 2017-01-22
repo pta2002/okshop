@@ -28,7 +28,7 @@
 		</form>
 	</div>
 	<div class="col-md-9">
-		<a href="" class="btn btn-default btn-block">Sell something</a>
+		<a href="{% url 'shop:sellproduct' %}" class="btn btn-block btn-primary product">Sell new item</a>
 		{% if shop.user.product_set.count > 0 %}
 		{% for product in shop.user.product_set.all %}
 		<div class="panel panel-default">
@@ -38,7 +38,7 @@
 				</div>
 				<div class="col-md-9">
 					<div class="product-name">
-						<a class="cart-product-name" href="{% url 'shop:viewproduct' product.id %}">{{ product }}</a> for <span class="price">{{ product.price|floatformat }}</span> OK.
+						<a class="cart-product-name" href="{% url 'shop:viewproduct' product.id %}">{{ product }}</a> for <span class="price">{{ product.price|floatformat }}</span> {{ product.price_currency }}.
 					</div>
 					<div class="info">
 						{{ product.stock }} in stock. <br>

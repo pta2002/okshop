@@ -15,7 +15,7 @@
 	</div>
 	<div class="panel-body">
 		<h2>My products</h2>
-		<div class="btn btn-block btn-primary product">Sell new item</div>
+		<a href="{% url 'shop:sellproduct' %}" class="btn btn-block btn-primary product">Sell new item</a>
 		{% for product in user.product_set.all %}
 		<div class="panel panel-default">
 			<div class="panel-body">

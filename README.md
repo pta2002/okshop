@@ -7,6 +7,7 @@ This is a cryptocurrency shop originally made for the [OKCash](https://okcash.co
  - django-sendfile
  - pyotp
  - qrcode
+ - cryptonator
  
 This app also requires a running OKCash daemon.
 

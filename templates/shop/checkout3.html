@@ -24,7 +24,11 @@
 							<div class="col-md-5">
 								<div class="row">
 									<div class="col-md-6">
-										Price: <span class="price">{{ product.product.price|floatformat }} OK</span>
+										Price: {% if product.product.price_currency != 'OK' %}
+										{{ product.product.price|floatformat }} {{ product.product.price_currency }} ({{ product.product.get_item_price|floatformat }} OK)
+										{% else %}
+										{{ product.product.get_price|floatformat }} OK
+										{% endif %}
 									</div>
 									<div class="col-md-6">
 										Quant.: <span class="quantity">{{ product.quantity }}</span>
@@ -54,7 +58,7 @@
 		<h3>Items: {{ checkout.cart.gettotal|floatformat }} OK</h3>
 		{% for item in checkout.cart.cartentry_set.all %}
 		{% if item.in_stock %}
-		{{ item.quantity }}&times; {{ item.product.product_name }} ({{ item.product.price|floatformat }} OK) = <span class="price">{{ item.gettotal|floatformat }} OK</span>
+		{{ item.quantity }}&times; {{ item.product.product_name }} ({{ item.product.get_item_price|floatformat }} OK) = <span class="price">{{ item.gettotal|floatformat }} OK</span>
 		{% endif %}
 		{% endfor %}
 		{% if checkout.shipping %}

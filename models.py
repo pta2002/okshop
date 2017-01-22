@@ -8,6 +8,7 @@ from django.urls import reverse
 from django.core.mail import send_mail
 from django_countries.fields import CountryField
 from . import cryptomethods as cm
+import cryptonator
 
 def get_file_path(instance, filename):
 	ext = filename.split('.')[-1]
@@ -37,6 +38,9 @@ class Product(models.Model):
 	approved = models.BooleanField(default=0)
 
 	price = models.DecimalField(max_digits=2**32, decimal_places=8)
+	price_currency = models.CharField(max_length=16, default='OK')
+	cached_rate = models.DecimalField(blank=True, null=True, max_digits=2**32, decimal_places=8)
+	rate_lastupdated = models.DateTimeField(default=timezone.now)
 
 	physical = models.BooleanField(default=0)
 	stock = models.IntegerField(blank=True,null=True)
@@ -79,16 +83,28 @@ class Product(models.Model):
 		if self.free_shipping or not self.physical:
 			return 0
 		if self.ships_from == address.country:
+			if self.price_currency != 'OK':
+				if not self.cached_rate or timezone.now() - self.rate_lastupdated >= timezone.timedelta(hours=1):
+					self.rate_lastupdated = timezone.now()
+					self.cached_rate = cryptonator.get_exchange_rate(self.price_currency, 'ok')
+					self.save()
+				return self.cached_rate * self.local_price
 			return self.local_price
+		if self.price_currency != 'OK':
+			if not self.cached_rate or timezone.now() - self.rate_lastupdated >= timezone.timedelta(hours=1):
+				self.rate_lastupdated = timezone.now()
+				self.cached_rate = cryptonator.get_exchange_rate(self.price_currency, 'ok')
+				self.save()
+			return self.cached_rate * self.outside_price
 		return self.outside_price
 
 	def buy(self, address, wallet, ammount, gift=False):
 		if (self.stock >= ammount or self.unlimited_stock) and self.ships_to(address):
-			wallet.send_to(self.seller.usershop.pay_to_address.address, self.get_shipping_price(address)+self.price*ammount)
+			wallet.send_to(self.seller.usershop.pay_to_address.address, self.get_shipping_price(address)+self.get_item_price()*ammount)
 			if not self.unlimited_stock: 
 				self.stock -= ammount
 			self.save()
-			return PurchaseItem(product=self, gift=gift, price=self.price, quantity=ammount, shipping_price=self.get_shipping_price(address), address=address)
+			return PurchaseItem(product=self, gift=gift, price=self.get_item_price(), quantity=ammount, shipping_price=self.get_shipping_price(address), address=address)
 
 	def get_earnings(self):
 		s = 0
@@ -99,6 +115,18 @@ class Product(models.Model):
 	def get_purchases(self):
 		return PurchaseItem.objects.filter(product=self)
 
+	def get_item_price(self):
+		if self.price_currency != 'OK':
+			if not self.cached_rate or timezone.now() - self.rate_lastupdated >= timezone.timedelta(hours=1):
+				self.rate_lastupdated = timezone.now()
+				self.cached_rate = cryptonator.get_exchange_rate(self.price_currency, 'ok')
+				self.save()
+			return self.cached_rate * self.price
+		return self.price
+
+	def update_rates(self):
+		self.cached_rate = cryptonator.get_exchange_rate(self.price_currency, 'ok')
+		self.save()
 
 class ShippingCountry(models.Model):
 	product = models.ForeignKey(Product)
@@ -164,7 +192,7 @@ class CartEntry(models.Model):
 		return "%d %s in %s" %  (self.quantity, self.product, self.cart)
 
 	def gettotal(self):
-		return self.product.price * self.quantity
+		return self.product.get_item_price() * self.quantity
 
 	def in_stock(self):
 		return self.quantity <= self.product.stock or self.product.unlimited_stock
@@ -270,6 +298,7 @@ class Wallet(models.Model):
 				w.redeemed -= ammount
 				w.save()
 			else:
+				print(self.get_balance(), ammount, self.get_balance() - ammount)
 				errors.append('Not enough funds!')
 		else:
 			if self.get_balance() - ammount - 1 >= 0:
@@ -386,6 +415,8 @@ class Checkout(models.Model):
 	user = models.ForeignKey(User)
 	wallet = models.ForeignKey(Wallet, blank=True, null=True)
 	shipping = models.ForeignKey(PhysicalAddress, blank=True, null=True)
+	cached_price = models.DecimalField(max_digits=2**32, decimal_places=8, blank=True, null=True)
+	cached_shipping = models.DecimalField(max_digits=2**32, decimal_places=8, blank=True, null=True)
 
 	def buy(self):
 		purchase = Purchase(by=self.user, shipped_to=self.shipping)
@@ -397,27 +428,31 @@ class Checkout(models.Model):
 					purchase_item.purchase = purchase
 					purchase_item.save()
 					if purchase_item.product.physical:
-						su = ShippingUpdate(purchase=purchase_item, update="Item purchased", short_description="Item purchased")
+						su = ShippingUpdate(purchase=purchase_item, update="Item purchased", short_update="Item purchased")
 						su.save()
 
 		return purchase
 
 
 	def get_shipping_price(self):
-		s = 0
-		for item in self.cart.cartentry_set.filter(product__stock__gte=F('quantity'), product__physical=True):
-			if item.product.ships_to(self.shipping) and self.user.userextra.can_purchase_item(item.product):
-				s += item.product.get_shipping_price(self.shipping)
-		return s
+		if not self.cached_shipping:
+			s = 0
+			for item in self.cart.cartentry_set.filter(product__stock__gte=F('quantity'), product__physical=True):
+				if item.product.ships_to(self.shipping) and self.user.userextra.can_purchase_item(item.product):
+					s += item.product.get_shipping_price(self.shipping)
+			self.cached_shipping = s
+			self.save()
+		return self.cached_shipping
 
 
 	def get_price(self):
 		#TODO: Item bundling, one shipping payment per shop.
 		s = 0
-		for item in self.cart.cartentry_set.filter(product__stock__gte=F('quantity'), product__physical=True):
-			if item.product.ships_to(self.shipping) and self.user.userextra.can_purchase_item(item.product):
-				s += item.product.get_shipping_price(self.shipping)
-		s += self.cart.gettotal()
+		if not self.cached_price:
+			self.cached_price = self.cart.gettotal()
+			self.save()
+		s += self.cached_price
+		s += self.get_shipping_price()
 		return s
 
 
