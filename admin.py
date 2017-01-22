@@ -57,7 +57,7 @@ class CartAdmin(admin.ModelAdmin):
 class UserExtraAdmin(admin.ModelAdmin):
 	list_display = ('user', 'verified', 'get_balance', 'get_pending')
 	list_filter = ('verified',)
-	readonly_fields = ('user', 'get_balance', 'get_pending')
+	readonly_fields = ('get_balance', 'get_pending')
 
 	fieldsets = [
 		('User info', {'fields': ['user']}),

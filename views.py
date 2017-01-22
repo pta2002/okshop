@@ -385,20 +385,46 @@ def authorize(request, forid):
 	if request.method == 'POST' and 'password' in request.POST:
 		u = authenticate(username=request.user.username, password=request.POST['password'])
 		if u is not None:
-			a = u.userextra.authorize(forid)
-			if 'next' in request.GET:
-				r = redirect(request.GET['next'])
+			if not u.userextra.authenticator_verified:
+				a = u.userextra.authorize(forid)
+				if 'next' in request.GET:
+					r = redirect(request.GET['next'])
+				else:
+					r = redirect('/')
+				r.set_signed_cookie('auth_%s' % forid, a.code, max_age=600, salt=u.username)
+				return r
 			else:
-				r = redirect('/')
-			r.set_signed_cookie('auth_%s' % forid, a.code, max_age=600, salt=u.username)
-			return r
+				request.session['user_awaiting_2fa'] = u.id
+				return render(request, 'shop/login_authenticator.html')
 		else:
-			# >:(
 			messages.warning(request, "Incorrect password.")
+	elif request.method == 'POST' and 'authcode' in request.POST:
+		try:
+			user = User.objects.get(id=request.session['user_awaiting_2fa'])
+			if user.userextra.authenticator_verified:
+				totp = pyotp.TOTP(user.userextra.authenticator_id)
+				if totp.verify(int(request.POST['authcode'])):
+					del request.session['user_awaiting_2fa']
+					a = user.userextra.authorize(forid)
+					if 'next' in request.GET:
+						r = redirect(request.GET['next'])
+					else:
+						r = redirect('/')
+					r.set_signed_cookie('auth_%s' % forid, a.code, max_age=600, salt=user.username)
+					return r
+				else:
+					messages.warning(request, "Incorrect 2FA code.")
+					return render(request, 'shop/login_authenticator.html')
+			else:
+				messages.warning(request, "This shouldn't happen... Try again.")
+				return render(request, 'shop/login_authenticator.html')
+		except:
+			messages.warning(request, "Incorrect 2FA code.")
+			return render(request, 'shop/login_authenticator.html')
 	return render(request, 'shop/confirmpassword.html')
 
 
-@login_required
+@login_requiredd 
 def purchases(request):
 	all_purchases = request.user.purchase_set.all().order_by('-date')
 	return render(request, 'shop/purchases.html', {'purchases': all_purchases})
