@@ -1,5 +1,5 @@
 <!-- ISO-3166-1 country list -->
-<select name="country" class="form-control" id="country">
+<select name="{{ name|default:"country" }}" class="form-control" id="{{ name|default:"country" }}" {% if multiple %}multiple{%endif%}>
 	<option value="AF">Afghanistan</option>
 	<option value="AX">Åland Islands</option>
 	<option value="AL">Albania</option>

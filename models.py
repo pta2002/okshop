@@ -35,7 +35,7 @@ def send_confirmation_email(user):
 class Product(models.Model):
 	product_name = models.CharField(max_length=140) # If you can't fit your product's name into a tweet you need a better name...
 	product_description = models.TextField()
-	approved = models.BooleanField(default=0)
+	approved = models.BooleanField(default=True)
 
 	price = models.DecimalField(max_digits=2**32, decimal_places=8)
 	price_currency = models.CharField(max_length=16, default='OK')
@@ -139,8 +139,9 @@ class ShippingCountry(models.Model):
 		return '%s ships to %s!' % (self.product, self.country)
 
 class ProductImage(models.Model):
-	product = models.ForeignKey(Product)
+	product = models.ForeignKey(Product, blank=True, null=True)
 	image = models.ImageField(upload_to=get_file_path)
+	delete = models.CharField(max_length=36,default=uuid.uuid4)
 
 class Cart(models.Model):
 	user = models.OneToOneField(User)

@@ -55,7 +55,7 @@
 		<div class="form-group">
 			<label class="col-sm-2 control-label" for="address2">Country</label>
 			<div class="col-sm-10">
-				{% include "countries.html" %}
+				{% include "countries.html" with name='country' %}
 			</div>
 		</div>
 		{% csrf_token %}

@@ -13,6 +13,7 @@ from .models import *
 from .decorators import *
 from . import cryptomethods as cm
 import re, json, qrcode, pyotp
+from PIL import Image
 
 # Create your views here.
 def view_product(request, id):
@@ -570,3 +571,22 @@ def google_settings(request):
 @login_required
 def sell_new_product(request):
 	return render(request, 'shop/newproduct.html')
+
+@csrf_exempt
+@login_required
+def upload_pic(request):
+	response = {'images':[]}
+	for pic in request.FILES.getlist('pics'):
+		try:
+			p = ProductImage(image=pic)
+			p.save()
+			response['images'].append({'url': p.image.url,'id': p.id, 'delete': p.delete})
+		except:
+			pass
+	return JsonResponse(response)
+
+@csrf_exempt
+@login_required
+def delete_pic(request, uuid):
+	pic = get_object_or_404(ProductImage, delete=uuid)
+	pic.delete()
