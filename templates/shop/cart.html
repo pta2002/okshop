@@ -32,7 +32,7 @@ Your cart is empty!
 										Price: {% if product.product.price_currency != 'OK' %}
 										{{ product.product.price|floatformat }} {{ product.product.price_currency }} ({{ product.product.get_item_price|floatformat }} OK)
 										{% else %}
-										{{ product.product.get_price|floatformat }} OK
+										{{ product.product.price|floatformat }} OK
 										{% endif %}
 									</div>
 									<div class="col-md-6">
