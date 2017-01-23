@@ -570,6 +570,90 @@ def google_settings(request):
 
 @login_required
 def sell_new_product(request):
+	if request.method == 'POST':
+		# Get ready for all the ifs!
+		errors = []
+		if request.POST.get('product-name', '').strip() == '':
+			errors.append("Product name can't be empty!")
+		if (not request.POST.get('unlimited', 'off') == 'on'):
+			try:
+				stock = int(request.POST.get('stock', 0))
+				if stock < 0:
+					errors.append('Stock has to be at least 0')
+			except ValueError:
+				errors.append('Stock has to be at least 0')
+		try:
+			price = int(request.POST.get('price', 0))
+			if price < 0:
+				errors.append('Price has to be at least 0')
+		except ValueError:
+			errors.append('Price has to be at least 0')
+		try:
+			cur = request.POST.get('currency', 'ok').strip()
+			rate = cryptonator.get_exchange_rate(cur, 'ok')
+		except cryptonator.CryptonatorException:
+			errors.append("Currency doesn't exist!")
+		if request.POST.get('physical', 'on') == 'on':
+			if request.POST.get('ships-from', 'US') not in dict(countries):
+				errors.append('%s is not a country!' % request.POST.get('ships-from', 'US'))
+			if not request.POST.get('worldwide-shipping', 'on') == 'on':
+				for country in request.POST.get('countries', []):
+					if country not in dict(countries):
+						errors.append('%s is not a country!' % country)
+			if not request.POST.get('free-shipping', 'off') == 'on':
+				try:
+					local_shipping = int(request.POST.get('local-price', 0))
+					if local_shipping < 0:
+						errors.append("Local shipping price must be at least 0")
+				except ValueError:
+					errors.append("Local shipping price must be at least 0")
+				try:
+					global_shipping = int(request.POST.get('global-price', 0))
+					if global_shipping < 0:
+						errors.append("Global shipping price must be at least 0")
+				except ValueError:
+					errors.append("Global shipping price must be at least 0")
+		_imgs = request.POST.getlist('images', [])
+		imgs = []
+		for img in _imgs:
+			try:
+				imgs.append(ProductImage.objects.get(uuid=img, product__isnull=True))
+			except: pass
+		if not imgs:
+			errors.append("Please upload at least one image")
+
+		if not errors:
+			p = Product(
+				product_name=request.POST.get('product-name', '').strip(),
+				product_description=request.POST.get('description', '').strip(),
+				price=int(request.POST.get('price', 0)),
+				price_currency=request.POST.get('currency', 'OK').strip(),
+				physical=request.POST.get('physical', 'on') == 'on',
+				stock=int(request.POST.get('stock', 0)),
+				seller=request.user,
+				free_shipping=request.POST.get('free-shipping', 'off') == 'on',
+				unlimited_stock=request.POST.get('unlimited', 'off') == 'on'
+				)
+			p.save()
+			for i in imgs:
+				i.product = p
+				i.save()
+			if p.physical:
+				p.local_price = int(request.POST.get('local-price', 0))
+				p.global_price = int(request.POST.get('global-price', 0))
+				p.worldwide_shipping = request.POST.get('worldwide-shipping', 'on') == 'on'
+				p.ships_from = request.POST.get('ships-from', 'US').strip()
+				p.save()
+				for country in request.POST.get('countries', []):
+					if country not in dict(countries):
+						c = ShippingCountry(country=country, product=p)
+						c.save()
+			p.save()
+			messages.success(request, "Added item!")
+			return redirect(p)
+
+		for error in errors:
+			messages.warning(request, error)
 	return render(request, 'shop/newproduct.html')
 
 @csrf_exempt
@@ -580,7 +664,7 @@ def upload_pic(request):
 		try:
 			p = ProductImage(image=pic)
 			p.save()
-			response['images'].append({'url': p.image.url,'id': p.id, 'delete': p.delete})
+			response['images'].append({'url': p.image.url,'id': p.id, 'delete': p.uuid})
 		except:
 			pass
 	return JsonResponse(response)
@@ -588,5 +672,7 @@ def upload_pic(request):
 @csrf_exempt
 @login_required
 def delete_pic(request, uuid):
-	pic = get_object_or_404(ProductImage, delete=uuid)
+	pic = get_object_or_404(ProductImage, uuid=uuid)
+	print(type(pic))
 	pic.delete()
+	return JsonResponse({'status': 'ok'})

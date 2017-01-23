@@ -2,7 +2,8 @@
 {% block title %}Sell new item{% endblock %}
 {% block body %}
 <h1>Create new listing</h1>
-<form action="{% url 'shop:sellproduct' %}">
+<form action="{% url 'shop:sellproduct' %}" method="POST">
+	{% csrf_token %}
 	<div class="panel panel-default">
 		<div class="panel-heading">
 			<h4>General info</h4>
@@ -10,7 +11,7 @@
 		<div class="panel-body">
 			<div class="form-group">
 				<label class="control-label" for="product_name">Product name (140 chars max)</label>
-				<input type="text" id="product_name" name="product_name" class="form-control" v-model="product_name" placeholder="Product name">
+				<input type="text" id="product-name" name="product-name" class="form-control" v-model="product_name" placeholder="Product name">
 			</div>
 			<div class="form-group">
 				<label for="description" class="control-label">Description</label>
@@ -71,14 +72,14 @@
 				<div class="form-group">
 					<label for="local-price" class="control-label">Local shipping price</label>
 					<div class="input-group">
-						<input type="number" name="local-price" placeholder="Local price" class="form-control" id="local-price">
+						<input type="number" name="local-price" v-model="localprice" placeholder="Local price" class="form-control" id="local-price">
 						<div class="input-group-addon">{%verbatim%}{{ currency }}{% endverbatim %}</div>
 					</div>
 				</div>
 				<div class="form-group">
 					<label for="global-price" class="control-label">Global shipping price</label>
 					<div class="input-group">
-						<input type="number" name="global-price" placeholder="Global price" class="form-control" id="global-price">
+						<input type="number" name="global-price" v-model="globalprice" placeholder="Global price" class="form-control" id="global-price">
 						<div class="input-group-addon">{%verbatim%}{{ currency }}{% endverbatim %}</div>
 					</div>
 				</div>
@@ -111,12 +112,12 @@
 					</div>
 				</div>
 				<select name="images" multiple class="hidden">
-					<option :value="image.id" v-for="image in images" selected="selected"></option>
+					<option :value="image.delete" v-for="image in images" selected="selected"></option>
 				</select>
 			</div>
 		</div>
 	</div>
-	<input type="submit" class="btn-primary btn btn-block" value="Create listing!" :disabled="!(product_name.trim() != '' && (unlimited || (stock >= 0 && stock !== '')) && (price >= 0 && price !== '') && currency != '')">
+	<input type="submit" class="btn-primary btn btn-block" value="Create listing!" :disabled="!(product_name.trim() != '' && (unlimited || (stock >= 0 && stock !== '')) && (price >= 0 && price !== '') && currency != '' && localprice >= 0 && localprice !== '' && globalprice >= 0 && globalprice !== '' && images.length > 0)">
 </form>
 {% endblock %}
 {% block extrascripts %}

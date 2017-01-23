@@ -10,6 +10,8 @@ var app = new Vue({
 		'worldwide': true,
 		'images': [],
 		'price': 0,
+		'localprice': 0,
+		'globalprice': 0,
 	},
 	methods: {
 		'uploadfiles': function(e) {
@@ -34,7 +36,10 @@ var app = new Vue({
 			document.getElementById("upload-pic").value = "";
 		},
 		'delpic':function(index){
-			this.images.splice(index,1);
+			pic = this.images.splice(index,1);
+			xhr = new XMLHttpRequest();
+			xhr.open('GET', '/api/deletepic/' + pic[0].delete + '/')
+			xhr.send();
 		}
 	}
 });

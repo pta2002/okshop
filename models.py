@@ -141,7 +141,7 @@ class ShippingCountry(models.Model):
 class ProductImage(models.Model):
 	product = models.ForeignKey(Product, blank=True, null=True)
 	image = models.ImageField(upload_to=get_file_path)
-	delete = models.CharField(max_length=36,default=uuid.uuid4)
+	uuid = models.CharField(max_length=36,default=uuid.uuid4)
 
 class Cart(models.Model):
 	user = models.OneToOneField(User)
