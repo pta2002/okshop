@@ -86,16 +86,16 @@ class Product(models.Model):
 			if self.price_currency != 'OK':
 				if not self.cached_rate or timezone.now() - self.rate_lastupdated >= timezone.timedelta(hours=1):
 					self.rate_lastupdated = timezone.now()
-					self.cached_rate = cryptonator.get_exchange_rate(self.price_currency, 'ok')
+					self.cached_rate = Decimal(cryptonator.get_exchange_rate(self.price_currency, 'ok'))
 					self.save()
-				return self.cached_rate * self.local_price
+				return Decimal(self.cached_rate) * Decimal(self.local_price)
 			return self.local_price
 		if self.price_currency != 'OK':
 			if not self.cached_rate or timezone.now() - self.rate_lastupdated >= timezone.timedelta(hours=1):
 				self.rate_lastupdated = timezone.now()
-				self.cached_rate = cryptonator.get_exchange_rate(self.price_currency, 'ok')
+				self.cached_rate = Decimal(cryptonator.get_exchange_rate(self.price_currency, 'ok'))
 				self.save()
-			return self.cached_rate * self.outside_price
+			return Decimal(self.cached_rate) * Decimal(self.outside_price)
 		return self.outside_price
 
 	def buy(self, address, wallet, ammount, gift=False):
@@ -104,6 +104,12 @@ class Product(models.Model):
 			if not self.unlimited_stock: 
 				self.stock -= ammount
 			self.save()
+			send_mail("Someone bought one of your items!", """Hello %s,
+
+The user %s has purchased your product, %s.
+We recommend you get in contact with the buyer as fast as possible.
+
+Thanks for selling with OKCart!""" % (self.seller.username, wallet.user.username, self.product_name), "no_reply@okcart.net", [self.seller.email])
 			return PurchaseItem(product=self, gift=gift, price=self.get_item_price(), quantity=ammount, shipping_price=self.get_shipping_price(address), address=address)
 
 	def get_earnings(self):
@@ -432,6 +438,12 @@ class Checkout(models.Model):
 						su = ShippingUpdate(purchase=purchase_item, update="Item purchased", short_update="Item purchased")
 						su.save()
 
+		send_mail("Receipt for your purchase on OKCart", """Hello %s,
+
+Here's the receipt for your recent purchase on OKCart:
+https://home.pta2002.com:8000%s
+
+Thanks for buying with OKCart!""" % (self.user.username, reverse('shop:purchase', kwargs={'uuid':purchase.uuid})), "no_reply@okcart.net", [self.user.email])
 		return purchase
 
 
