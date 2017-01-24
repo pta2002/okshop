@@ -388,6 +388,9 @@ class PurchaseItem(models.Model):
 	address = models.ForeignKey(PhysicalAddress, blank=True, null=True)
 	shipping_price = models.DecimalField(max_digits=2**32, decimal_places=8, default=0)
 
+	def done(self):
+		return self.shippingupdate_set.filter(done=True).count() > 0
+
 	def gettotal(self):
 		return self.price * self.quantity + self.shipping_price
 
