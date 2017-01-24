@@ -19,6 +19,9 @@
 				SHIPPED TO:<br>
 				{{ purchase.purchase.shipped_to.name }}
 			</div>
+			<div class="col-sm-2">
+				{% if not purchase.done %}NOT {% endif %}DELIVERED
+			</div>
 			<div class="col-sm-4">
 				PURCHASE ID:<br>
 				<a href="{% url 'shop:purchase' purchase.purchase.uuid %}">{{ purchase.purchase.uuid }}</a>

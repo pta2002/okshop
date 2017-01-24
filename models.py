@@ -126,9 +126,9 @@ Thanks for selling with OKCart!""" % (self.seller.username, wallet.user.username
 		if self.price_currency != 'OK':
 			if not self.cached_rate or timezone.now() - self.rate_lastupdated >= timezone.timedelta(hours=1):
 				self.rate_lastupdated = timezone.now()
-				self.cached_rate = cryptonator.get_exchange_rate(self.price_currency, 'ok')
+				self.cached_rate = Decimal(cryptonator.get_exchange_rate(self.price_currency, 'ok'))
 				self.save()
-			return self.cached_rate * self.price
+			return Decimal(self.cached_rate) * Decimal(self.price)
 		return self.price
 
 	def update_rates(self):
@@ -546,6 +546,7 @@ class ShippingUpdate(models.Model):
 	date = models.DateTimeField(default=timezone.now)
 	short_update = models.CharField(max_length=200)
 	update = models.TextField(default='')
+	done = models.BooleanField(default=False)
 
 	def __str__(self):
 		return self.short_update

@@ -529,6 +529,10 @@ def download_file(request, id):
 def dashboard(request):
 	return render(request, 'shop/dashboard.html')
 
+@login_required
+def seller_purchases(request):
+	pass
+
 def qr_code(request):
 	t = request.GET.get('text', '')
 	img = qrcode.make(t)
@@ -593,7 +597,7 @@ def sell_new_product(request):
 			rate = cryptonator.get_exchange_rate(cur, 'ok')
 		except cryptonator.CryptonatorException:
 			errors.append("Currency doesn't exist!")
-		if request.POST.get('physical', 'on') == 'on':
+		if request.POST.get('is-physical', 'on') == 'on':
 			if request.POST.get('ships-from', 'US') not in dict(countries):
 				errors.append('%s is not a country!' % request.POST.get('ships-from', 'US'))
 			if not request.POST.get('worldwide-shipping', 'on') == 'on':
@@ -628,7 +632,7 @@ def sell_new_product(request):
 				product_description=request.POST.get('description', '').strip(),
 				price=Decimal(request.POST.get('price', 0)),
 				price_currency=request.POST.get('currency', 'OK').strip(),
-				physical=request.POST.get('physical', 'on') == 'on',
+				physical=request.POST.get('is-physical', 'on') == 'on',
 				stock=int(request.POST.get('stock', 0)),
 				seller=request.user,
 				free_shipping=request.POST.get('free-shipping', 'off') == 'on',

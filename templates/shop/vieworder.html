@@ -63,7 +63,11 @@
 						{% for event in updates %}
 						<li {% if forloop.counter|divisibleby:2 %}class="timeline-inverted"{% endif %}>
 							<div class="timeline-badge">
+								{% if not event.done %}
 								<a><i class="fa fa-circle"></i></a>
+								{% else %}
+								<a><i class="fa fa-check-circle" style="color:#2ecc71"></i></a>
+								{% endif %}
 							</div>
 							<div class="timeline-panel">
 								<div class="timeline-heading">

@@ -9,7 +9,7 @@
 				EARNINGS: {{ user.usershop.get_earnings|floatformat }} OK
 			</div>
 			<div class="col-sm-2">
-				PURCHASES: {{ user.usershop.get_purchases.count }}
+				SALES: {{ user.usershop.get_purchases.count }}
 			</div>
 		</div>
 	</div>
@@ -26,7 +26,7 @@
 					<a href="{% url 'shop:viewproduct' product.id %}" class="cart-product-name">{{ product.product_name }}</a><br>
 					PRICE: {{ product.price|floatformat }} OK <br>
 					EARNINGS: {{ product.get_earnings|floatformat }} OK<br>
-					PURCASES: {{ product.get_purchases.count }}
+					SALES: {{ product.get_purchases.count }}
 				</div>
 			</div>
 			<div class="panel-footer">
