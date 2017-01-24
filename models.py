@@ -8,6 +8,7 @@ from django.urls import reverse
 from django.core.mail import send_mail
 from django_countries.fields import CountryField
 from . import cryptomethods as cm
+from decimal import Decimal
 import cryptonator
 
 def get_file_path(instance, filename):

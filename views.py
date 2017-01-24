@@ -583,7 +583,7 @@ def sell_new_product(request):
 			except ValueError:
 				errors.append('Stock has to be at least 0')
 		try:
-			price = int(request.POST.get('price', 0))
+			price = Decimal(request.POST.get('price', 0))
 			if price < 0:
 				errors.append('Price has to be at least 0')
 		except ValueError:
@@ -602,13 +602,13 @@ def sell_new_product(request):
 						errors.append('%s is not a country!' % country)
 			if not request.POST.get('free-shipping', 'off') == 'on':
 				try:
-					local_shipping = int(request.POST.get('local-price', 0))
+					local_shipping = Decimal(request.POST.get('local-price', 0))
 					if local_shipping < 0:
 						errors.append("Local shipping price must be at least 0")
 				except ValueError:
 					errors.append("Local shipping price must be at least 0")
 				try:
-					global_shipping = int(request.POST.get('global-price', 0))
+					global_shipping = Decimal(request.POST.get('global-price', 0))
 					if global_shipping < 0:
 						errors.append("Global shipping price must be at least 0")
 				except ValueError:
@@ -626,7 +626,7 @@ def sell_new_product(request):
 			p = Product(
 				product_name=request.POST.get('product-name', '').strip(),
 				product_description=request.POST.get('description', '').strip(),
-				price=int(request.POST.get('price', 0)),
+				price=Decimal(request.POST.get('price', 0)),
 				price_currency=request.POST.get('currency', 'OK').strip(),
 				physical=request.POST.get('physical', 'on') == 'on',
 				stock=int(request.POST.get('stock', 0)),
@@ -639,8 +639,8 @@ def sell_new_product(request):
 				i.product = p
 				i.save()
 			if p.physical:
-				p.local_price = int(request.POST.get('local-price', 0))
-				p.global_price = int(request.POST.get('global-price', 0))
+				p.local_price = Decimal(request.POST.get('local-price', 0))
+				p.global_price = Decimal(request.POST.get('global-price', 0))
 				p.worldwide_shipping = request.POST.get('worldwide-shipping', 'on') == 'on'
 				p.ships_from = request.POST.get('ships-from', 'US').strip()
 				p.save()
