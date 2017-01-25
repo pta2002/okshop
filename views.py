@@ -540,6 +540,13 @@ def seller_purchases(request):
 
 	return render(request, 'shop/sales.html', {'inproggress': inproggress})
 
+@login_required
+def manage_order(request, id):
+	order = get_object_or_404(PurchaseItem, product__seller=request.user, id=id, product__physical=True)
+	updates = order.shippingupdate_set.all().order_by('-date')
+	return render(request, 'shop/manageorder.html', {'order': order, 'updates':updates})
+
+
 def qr_code(request):
 	t = request.GET.get('text', '')
 	img = qrcode.make(t)

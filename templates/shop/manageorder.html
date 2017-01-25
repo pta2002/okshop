@@ -1,0 +1,90 @@
+{% extends "shop/base.html" %}
+{% block title %}Manage order{% endblock %}
+{% block body %}
+<h1>Manage order</h1>
+<div class="panel panel-default">
+	<div class="panel-heading">
+		<div class="row">
+			<div class="col-sm-2">
+				DATE PURCHASED:<br>
+				{{ order.purchase.date|date:"F jS, Y"}}
+			</div>
+			<div class="col-sm-2">
+				PRICE:<br>
+				{{ order.gettotal|floatformat }} OK
+			</div>
+			<div class="col-sm-2">
+				SHIPPED TO:<br>
+				<a href="#" data-toggle="tooltip" title="{{ order.address.address1 }}, {{ order.address.state }}, {{ order.address.country }}">{{ order.purchase.shipped_to.name }}</a>
+			</div>
+			<div class="col-sm-2">
+				BOUGHT BY: {{ order.purchase.by.username }}
+			</div>
+		</div>
+	</div>
+	<div class="panel-body">
+		<div class="row">
+			<div class="col-md-2">
+				<img src="{{ order.product.productimage_set.first.image.url }}" alt="{{ order.product.product_name }}" class="img-responsive">
+			</div>
+			<div class="col-md-10">
+				<div class="product-name">
+					<a class="cart-product-name" href="{% url 'shop:viewproduct' order.product.id %}">{{ order.product }}</a> sold by {{order.product.seller}}
+				</div>
+				<div class="col-md-4">
+					<h2>Order summary</h2>
+					<table class="table">
+						<tr>
+							<td>Bought by</td>
+							<td>{{order.purchase.by}}</td>
+						</tr>
+						<tr>
+							<td>Quantity</td>
+							<td>{{ order.quantity }}</td>
+						</tr>
+						<tr>
+							<td>Shipped to</td>
+							<td><a href="#" data-toggle="tooltip" title="{% if order.address.address2 %}{{ order.address.address2 }}, {% endif %}{{ order.address.address1 }}, {{ order.address.state }}, {{ order.address.zipcode }}, {{ order.address.country }}">{{ order.purchase.shipped_to.name }}</a></td>
+						</tr>
+						<tr>
+							<td>Price</td>
+							<td>{{ order.price }} OK</td>
+						</tr>
+						<tr>
+							<td>Shipping price</td>
+							<td>{{ order.shipping_price }} OK</td>
+						</tr>
+					</table>
+				</div>
+				<div class="col-md-8">
+					<h2>Shipping updates</h2>
+					<!-- Credit: https://codepen.io/jenniferperrin/pen/xfwab -->
+					<ul class="timeline">
+						{% for event in updates %}
+						<li {% if forloop.counter|divisibleby:2 %}class="timeline-inverted"{% endif %}>
+							<div class="timeline-badge">
+								{% if not event.done %}
+								<a><i class="fa fa-circle"></i></a>
+								{% else %}
+								<a><i class="fa fa-check-circle" style="color:#2ecc71"></i></a>
+								{% endif %}
+							</div>
+							<div class="timeline-panel">
+								<div class="timeline-heading">
+									<h4>{{ event.short_update }}</h4>
+								</div>
+								<div class="timeline-body">
+									<p>{{ event.update }}</p>
+								</div>
+								<div class="timeline-footer">{{ event.date|date:"F jS, Y"}}</div>
+							</div>
+						</li>
+						{% endfor %}
+						<li class="clearfix no-float"></li>
+					</ul>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+{% endblock %}

@@ -14,35 +14,51 @@
 		{% for purchase in inproggress %}
 		<hr>
 		<div class="row">
-			<div class="col col-md-2">
+			<div class="col col-sm-2">
 				<img src="{{ purchase.product.productimage_set.first.image.url }}" alt="{{ purchase.product.name }}" class="img-responsive">
 			</div>
-			<div class="col col-md-10">
+			<div class="col col-sm-10">
 				<div class="product-name">
 					<a class="cart-product-name" href="{% url 'shop:viewproduct' purchase.product.id %}">{{ purchase.product }}</a>
 				</div>
-				<table class="table">
-					<tr>
-						<td>Bought by</td>
-						<td>{{purchase.purchase.by}}</td>
-					</tr>
-					<tr>
-						<td>Shipped to</td>
-						<td><a href="#" data-toggle="tooltip" title="{% if purchase.address.address2 %}{{ purchase.address.address2 }}, {% endif %}{{ purchase.address.address1 }}, {{ purchase.address.state }}, {{ purchase.address.zipcode }}, {{ purchase.address.country }}">{{ purchase.purchase.shipped_to.name }}</a></td>
-					</tr>
-					<tr>
-						<td>Price</td>
-						<td>{{ purchase.price }} OK</td>
-					</tr>
-					<tr>
-						<td>Shipping price</td>
-						<td>{{ purchase.shipping_price }} OK</td>
-					</tr>
-				</table>
-				<p>
-					<h4>LAST UPDATE ({{ purchase.get_last_update.date|date:"F jS, Y"}})</h4>
-					<p>{{ purchase.get_last_update.update }}</p>
-				</p>
+				<div class="row">
+					<div class="col-md-8">
+						<table class="table">
+							<tr>
+								<td>Bought by</td>
+								<td>{{purchase.purchase.by}}</td>
+							</tr>
+							<tr>
+								<td>Quantity</td>
+								<td>{{ purchase.quantity }}</td>
+							</tr>
+							<tr>
+								<td>Shipped to</td>
+								<td><a href="#" data-toggle="tooltip" title="{% if purchase.address.address2 %}{{ purchase.address.address2 }}, {% endif %}{{ purchase.address.address1 }}, {{ purchase.address.state }}, {{ purchase.address.zipcode }}, {{ purchase.address.country }}">{{ purchase.purchase.shipped_to.name }}</a></td>
+							</tr>
+							<tr>
+								<td>Price</td>
+								<td>{{ purchase.price }} OK</td>
+							</tr>
+							<tr>
+								<td>Shipping price</td>
+								<td>{{ purchase.shipping_price }} OK</td>
+							</tr>
+						</table>
+					</div>
+					<div class="col-md-4">
+						<section>
+							{% if purchase.get_last_update %}
+							<h3>Last update</h3>
+							<p class="text-muted">On {{ purchase.get_last_update.date|date:"F jS, Y"}}</p>
+							<p>{{purchase.get_last_update.short_update}}</p>
+							{% endif %}
+						</section>
+						<section>
+							<a href="{% url 'shop:manageorder' purchase.id %}" class="btn btn-block btn-default">Manage order</a>
+						</section>
+					</div>
+				</div>
 			</div>
 		</div>
 		{% endfor %}

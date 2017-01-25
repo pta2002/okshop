@@ -23,6 +23,7 @@ urlpatterns = [
 	url(r'^me/purchases/(?P<uuid>[A-Za-z0-9\-\_]{36})/$', views.view_purchase, name='purchase'),
 	url(r'^me/dashboard/$', views.dashboard, name='dashboard'),
 	url(r'^me/dashboard/sales/$', views.seller_purchases, name='sales'),
+	url(r'^me/dashboard/sales/(?P<id>\d*[1-9]\d*)/$', views.manage_order, name='manageorder'),
 	url(r'^me/dashboard/new/$', views.sell_new_product, name='sellproduct'),
 	url(r'^accounts/login/$', views.login_view, name='login'),
 	url(r'^accounts/register/$', views.register_view, name='register'),
