@@ -9,7 +9,7 @@
 				EARNINGS: {{ user.usershop.get_earnings|floatformat }} OK
 			</div>
 			<div class="col-sm-2">
-				SALES: {{ user.usershop.get_purchases.count }}
+				<a href="{% url 'shop:sales' %}">SALES: {{ user.usershop.get_purchases.count }}</a>
 			</div>
 		</div>
 	</div>

@@ -6,6 +6,7 @@ from django.contrib import messages
 from django.http import HttpResponse, JsonResponse, Http404
 from django.template import defaultfilters as df
 from django.conf import settings
+from django.db import models
 from django_countries import countries
 from decimal import Decimal
 from sendfile import sendfile
@@ -531,7 +532,13 @@ def dashboard(request):
 
 @login_required
 def seller_purchases(request):
-	pass
+	inproggress = PurchaseItem.objects.all()\
+		.annotate(done=models.Count(models.Case(
+			models.When(shippingupdate__done=True,then=1),output_field=models.CharField())))\
+		.filter(product__seller=request.user,done=0, product__physical=True)\
+		.order_by('-purchase__date')\
+
+	return render(request, 'shop/sales.html', {'inproggress': inproggress})
 
 def qr_code(request):
 	t = request.GET.get('text', '')

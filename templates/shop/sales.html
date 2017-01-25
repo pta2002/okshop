@@ -1,0 +1,52 @@
+{% extends "shop/base.html" %}
+{% block title %}Sales{% endblock %}
+{% block body %}
+<h1>Sales</h1>
+{% if inproggress %}
+<div class="panel panel-default">
+	<div class="panel-heading">
+		<h3>In proggress</h3>
+	</div>
+	<div class="panel-body">
+		<p>
+			There {{inproggress.count|pluralize:"is,are"}} {{ inproggress.count }} order{{ inproggress.count|pluralize }} in proggress.
+		</p>
+		{% for purchase in inproggress %}
+		<hr>
+		<div class="row">
+			<div class="col col-md-2">
+				<img src="{{ purchase.product.productimage_set.first.image.url }}" alt="{{ purchase.product.name }}" class="img-responsive">
+			</div>
+			<div class="col col-md-10">
+				<div class="product-name">
+					<a class="cart-product-name" href="{% url 'shop:viewproduct' purchase.product.id %}">{{ purchase.product }}</a>
+				</div>
+				<table class="table">
+					<tr>
+						<td>Bought by</td>
+						<td>{{purchase.purchase.by}}</td>
+					</tr>
+					<tr>
+						<td>Shipped to</td>
+						<td><a href="#" data-toggle="tooltip" title="{% if purchase.address.address2 %}{{ purchase.address.address2 }}, {% endif %}{{ purchase.address.address1 }}, {{ purchase.address.state }}, {{ purchase.address.zipcode }}, {{ purchase.address.country }}">{{ purchase.purchase.shipped_to.name }}</a></td>
+					</tr>
+					<tr>
+						<td>Price</td>
+						<td>{{ purchase.price }} OK</td>
+					</tr>
+					<tr>
+						<td>Shipping price</td>
+						<td>{{ purchase.shipping_price }} OK</td>
+					</tr>
+				</table>
+				<p>
+					<h4>LAST UPDATE ({{ purchase.get_last_update.date|date:"F jS, Y"}})</h4>
+					<p>{{ purchase.get_last_update.update }}</p>
+				</p>
+			</div>
+		</div>
+		{% endfor %}
+	</div>
+</div>
+{% endif %}
+{% endblock %}
