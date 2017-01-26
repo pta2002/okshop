@@ -543,6 +543,21 @@ def seller_purchases(request):
 @login_required
 def manage_order(request, id):
 	order = get_object_or_404(PurchaseItem, product__seller=request.user, id=id, product__physical=True)
+
+	if request.method == 'POST':
+		if request.POST.get('shortupdate', '').strip() != '':
+			errors = []
+			if len(request.POST.get('shortupdate', '').strip()) > 200:
+				errors.append('Short update must be at most 200 characters')
+
+			if not errors:
+				u = ShippingUpdate(purchase=order, short_update=request.POST.get('shortupdate', '').strip(), update=request.POST.get('longupdate', '').strip(), done=request.POST.get('done', 'off') == 'on')
+				u.save()
+				messages.success(request, "Successfully updated")
+
+			for error in errors:
+				messages.warning(request, error)
+
 	updates = order.shippingupdate_set.all().order_by('-date')
 	return render(request, 'shop/manageorder.html', {'order': order, 'updates':updates})
 
