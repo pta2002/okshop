@@ -7,6 +7,7 @@ from django.contrib.auth.models import User
 from django.urls import reverse
 from django.core.mail import send_mail
 from django_countries.fields import CountryField
+from django.conf import settings
 from . import cryptomethods as cm
 from decimal import Decimal
 import cryptonator
@@ -101,7 +102,11 @@ class Product(models.Model):
 
 	def buy(self, address, wallet, ammount, gift=False):
 		if (self.stock >= ammount or self.unlimited_stock) and self.ships_to(address):
-			wallet.send_to(self.seller.usershop.pay_to_address.address, self.get_shipping_price(address)+self.get_item_price()*ammount)
+			if getattr(settings, 'FEE_ADDRESS', '') != '':
+				wallet.send_to(getattr(settings, 'FEE_ADDRESS', ''), (self.get_shipping_price(address)+self.get_item_price()*ammount)*0.005)
+				wallet.send_to(self.seller.usershop.pay_to_address.address, (self.get_shipping_price(address)+self.get_item_price()*ammount)*0.995)
+			else:
+				wallet.send_to(self.seller.usershop.pay_to_address.address, (self.get_shipping_price(address)+self.get_item_price()*ammount)*1)
 			if not self.unlimited_stock: 
 				self.stock -= ammount
 			self.save()
