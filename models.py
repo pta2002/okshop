@@ -10,7 +10,7 @@ from django_countries.fields import CountryField
 from django.conf import settings
 from . import cryptomethods as cm
 from decimal import Decimal
-import cryptonator
+import cryptonator, pyotp
 
 def get_file_path(instance, filename):
 	ext = filename.split('.')[-1]
@@ -251,6 +251,12 @@ class UserExtra(models.Model):
 			b += w.get_balance()
 		return b
 	get_balance.short_description = 'balance'
+
+	def verify_2fa(self, code):
+		if self.authenticator_verified:
+			totp = pyotp.TOTP(self.authenticator_id)
+			return totp.verify(code)
+		return True
 
 	def get_highest_balance_wallet(self):
 		b = Wallet(user=self.user,label='')

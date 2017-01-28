@@ -152,6 +152,8 @@ def register_view(request):
 				len(username) > 150 or \
 				username == '':
 				errors.append('Invalid username!')
+			if len(password) < 8:
+				errors.append("Password must be at least 8 characters long")
 			if password != passwordconfirm:
 				errors.append('Passwords don\'t match')
 			if not validateEmail(email):
@@ -387,7 +389,7 @@ def checkout(request):
 @login_required
 def authorize(request, forid):
 	if request.method == 'POST' and 'password' in request.POST:
-		u = authenticate(username=request.user.username, password=request.POST['password'])
+		u = authenticate(username=request.user.username, password=request.POST.get('password', ''))
 		if u is not None:
 			if not u.userextra.authenticator_verified:
 				a = u.userextra.authorize(forid)
@@ -734,3 +736,34 @@ def delete_pic(request, uuid):
 	print(type(pic))
 	pic.delete()
 	return JsonResponse({'status': 'ok'})
+
+@login_required
+def change_password(request):
+	if request.method == 'POST':
+		errors = []
+		curpass = request.POST.get('curpassword', '')
+
+		u = authenticate(username=request.user.username, password=curpass)
+		if u is None:
+			errors.append("Incorrect password")
+
+		if len(request.POST.get('newpassword', '')) < 8:
+			errors.append("Password must be at least 8 characters long")
+
+		if not request.POST.get('newpassword', '') == request.POST.get('confirmnewpass', ''):
+			errors.append("Passwords don't match!")
+
+		if request.user.userextra.authenticator_verified:
+			if not request.user.userextra.verify_2fa(request.POST.get('2facode', '')):
+				errors.append("Google auth code is incorrect")
+
+		if not errors:
+			u.set_password(request.POST.get('newpassword', ''))
+			u.save()
+			messages.success(request, "Changed password!")
+			return redirect("shop:settings")
+
+		for error in errors:
+			messages.warning(request, error)
+
+	return render(request, 'shop/changepassword.html')
