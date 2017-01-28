@@ -70,36 +70,7 @@ def login_view(request):
 					ue = UserExtra(user=user)
 					ue.save()
 				if user.userextra.verified:
-					if not user.userextra.authenticator_verified:
-						login(request, user)
-						messages.success(request, "Welcome back, %s!" % user.username)
-
-						# If user has no cart, give them one.
-						if not hasattr(user, 'cart'):
-							cart = Cart(user=user)
-							cart.save()
-						if user.wallet_set.count() <= 0:
-							w = Wallet(label='default', user=user)
-							w.save()
-						if 'next' in request.GET and request.GET['next'] != '':
-							return redirect(request.GET['next'])
-						else:
-							return redirect('/')
-					else:
-						request.session['user_awaiting_2fa'] = user.id
-						return render(request, 'shop/login_authenticator.html')
-				else:
-					messages.warning(request, "Email hasn't been verified yet! A new verification email has been sent.")
-					send_confirmation_email(user)
-			else:
-				messages.warning(request, 'Invalid username/password!')
-		elif 'authcode' in request.POST and 'user_awaiting_2fa' in request.session:
-			try:
-				user = User.objects.get(id=request.session['user_awaiting_2fa'])
-				if user.userextra.authenticator_verified:
-					totp = pyotp.TOTP(user.userextra.authenticator_id)
-					if totp.verify(int(request.POST['authcode'])):
-						del request.session['user_awaiting_2fa']
+					if user.userextra.verify_2fa(request.POST.get('2facode', '')):
 						login(request, user)
 						messages.success(request, "Welcome back, %s!" % user.username)
 
@@ -116,13 +87,11 @@ def login_view(request):
 							return redirect('/')
 					else:
 						messages.warning(request, "Incorrect 2FA code.")
-						return render(request, 'shop/login_authenticator.html')
 				else:
-					messages.warning(request, "This shouldn't happen... Try again.")
-					return render(request, 'shop/login_authenticator.html')
-			except:
-				messages.warning(request, "Incorrect 2FA code.")
-				return render(request, 'shop/login_authenticator.html')
+					messages.warning(request, "Email hasn't been verified yet! A new verification email has been sent.")
+					send_confirmation_email(user)
+			else:
+				messages.warning(request, 'Invalid username/password!')
 
 	return render(request, 'shop/login.html')
 
@@ -391,7 +360,7 @@ def authorize(request, forid):
 	if request.method == 'POST' and 'password' in request.POST:
 		u = authenticate(username=request.user.username, password=request.POST.get('password', ''))
 		if u is not None:
-			if not u.userextra.authenticator_verified:
+			if u.userextra.verify_2fa(request.POST.get('2facode', '')):
 				a = u.userextra.authorize(forid)
 				if 'next' in request.GET:
 					r = redirect(request.GET['next'])
@@ -400,33 +369,10 @@ def authorize(request, forid):
 				r.set_signed_cookie('auth_%s' % forid, a.code, max_age=600, salt=u.username)
 				return r
 			else:
-				request.session['user_awaiting_2fa'] = u.id
-				return render(request, 'shop/login_authenticator.html')
+				messages.warning(request, "Wrong 2FA code")
 		else:
 			messages.warning(request, "Incorrect password.")
-	elif request.method == 'POST' and 'authcode' in request.POST:
-		try:
-			user = User.objects.get(id=request.session['user_awaiting_2fa'])
-			if user.userextra.authenticator_verified:
-				totp = pyotp.TOTP(user.userextra.authenticator_id)
-				if totp.verify(int(request.POST['authcode'])):
-					del request.session['user_awaiting_2fa']
-					a = user.userextra.authorize(forid)
-					if 'next' in request.GET:
-						r = redirect(request.GET['next'])
-					else:
-						r = redirect('/')
-					r.set_signed_cookie('auth_%s' % forid, a.code, max_age=600, salt=user.username)
-					return r
-				else:
-					messages.warning(request, "Incorrect 2FA code.")
-					return render(request, 'shop/login_authenticator.html')
-			else:
-				messages.warning(request, "This shouldn't happen... Try again.")
-				return render(request, 'shop/login_authenticator.html')
-		except:
-			messages.warning(request, "Incorrect 2FA code.")
-			return render(request, 'shop/login_authenticator.html')
+	
 	return render(request, 'shop/confirmpassword.html')
 
 
