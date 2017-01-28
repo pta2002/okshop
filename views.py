@@ -536,9 +536,14 @@ def seller_purchases(request):
 		.annotate(done=models.Count(models.Case(
 			models.When(shippingupdate__done=True,then=1),output_field=models.CharField())))\
 		.filter(product__seller=request.user,done=0, product__physical=True)\
-		.order_by('-purchase__date')\
+		.order_by('-purchase__date')
+	doneorders = PurchaseItem.objects.all()\
+		.annotate(done=models.Count(models.Case(
+			models.When(shippingupdate__done=True,then=1),output_field=models.CharField())))\
+		.filter(product__seller=request.user,done__gt=0)\
+		.order_by('-purchase__date')
 
-	return render(request, 'shop/sales.html', {'inproggress': inproggress})
+	return render(request, 'shop/sales.html', {'inproggress': inproggress, 'done': doneorders})
 
 @login_required
 def manage_order(request, id):
@@ -554,6 +559,26 @@ def manage_order(request, id):
 				u = ShippingUpdate(purchase=order, short_update=request.POST.get('shortupdate', '').strip(), update=request.POST.get('longupdate', '').strip(), done=request.POST.get('done', 'off') == 'on')
 				u.save()
 				messages.success(request, "Successfully updated")
+				if not u.done:
+					send_mail("Update on one of your orders", """Hello %s,
+
+There's a new update for your order of %d %s.
+
+	%s
+
+	%s
+
+Thanks for buying with OKCart!""" % (order.purchase.by, order.quantity, order.product.product_name, u.short_update, u.update), "no_reply@okcart.net", [order.purchase.by.email])
+				else:
+					send_mail("One of your orders is done", """Hello %s,
+
+Your order for %d %s is done.
+
+	%s
+
+	%s
+
+Thanks for buying with OKCart!""" % (order.purchase.by, order.quantity, order.product.product_name, u.short_update, u.update), "no_reply@okcart.net", [order.purchase.by.email])
 
 			for error in errors:
 				messages.warning(request, error)

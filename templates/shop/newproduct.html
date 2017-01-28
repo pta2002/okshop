@@ -22,7 +22,7 @@
 		     		<input type="checkbox" name="is-physical" v-model="physical"> Is this product physical?
 		    	</label>
 		 	</div>
-		 	<div class="text-info" v-if="!physical">
+		 	<div class="help-block" v-if="!physical">
 		 		You'll be able to upload files/keys later.
 		 	</div>
 		 	<div class="checkbox">
@@ -50,7 +50,7 @@
 			<div class="form-group">
 				<label for="price" class="control-label">Currency (use currency ticker)</label>
 				<input type="text" name="currency" placeholder="Currency" id="currency" class="form-control" v-model="currency">
-				<div class="text-info" v-if="currency != 'OK'">
+				<div class="help-block" v-if="currency != 'OK'">
 					The price will be estimated from the cryptonator API.
 				</div>
 			</div>
