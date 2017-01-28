@@ -13,6 +13,7 @@ urlpatterns = [
 	url(r'^me/shop/edit/$', views.editshop, name='editshop'),
 	url(r'^me/wallets/$', views.wallets, name='wallets'),
 	url(r'^me/settings/$', views.my_settings, name='settings'),
+	url(r'^me/settings/account/changepassword/$', views.change_password, name='changepassword'),
 	url(r'^me/settings/2fa/$', views.auth_settings, name='2fasettings'),
 	url(r'^me/settings/2fa/google/$', views.google_settings, name='googlesettings'),
 	url(r'^me/purchases/$', views.purchases, name='purchases'),

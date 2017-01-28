@@ -734,3 +734,7 @@ def delete_pic(request, uuid):
 	print(type(pic))
 	pic.delete()
 	return JsonResponse({'status': 'ok'})
+
+@login_required
+def change_password(request):
+	return render(request, 'shop/changepassword.html')
