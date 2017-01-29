@@ -7,8 +7,11 @@ python:
 
 env:
   - DJANGO=1.10
+  - DJANGO_SETTINGS_MODULE=shop.test_settings
 
 install:
   - pip install -q Django==$DJANGO
+  - pip install -q .
   - pip install -qr requirements.txt
 
+script: python manage.py test
