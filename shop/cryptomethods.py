@@ -21,7 +21,7 @@ def getreceivedbyaddress(address, confirms):
 		rpc = get_rpc()
 		return rpc.getreceivedbyaddress(address, confirms)
 	else:
-		return 10
+		return 0
 
 def settxfee(fee):
 	if not settings.TESTING:

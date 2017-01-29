@@ -110,14 +110,14 @@
 		{
 			label: "{{ wallet.label }}",
 			address: "{{ wallet.address }}",
-			balance: "{{ wallet.get_balance|floatformat }}",
-			pending: "{{ wallet.get_pending|floatformat }}",
+			balance: "{{ wallet.get_balance }}",
+			pending: "{{ wallet.get_pending }}",
 			id: "{{ wallet.id }}",
 		},
 		{% endfor %}
 	];
-	totalbalance = "{{ user.userextra.get_balance|floatformat }}";
-	totalpending = "{{ user.userextra.get_pending|floatformat }}";
+	totalbalance = "{{ user.userextra.get_balance }}";
+	totalpending = "{{ user.userextra.get_pending }}";
 </script>
 <script src="{% static 'shop/vue.js' %}"></script>
 <script src="{% static 'shop/wallet.js' %}"></script>

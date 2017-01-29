@@ -103,8 +103,8 @@ class Product(models.Model):
 	def buy(self, address, wallet, ammount, gift=False):
 		if (self.stock >= ammount or self.unlimited_stock) and self.ships_to(address):
 			if getattr(settings, 'FEE_ADDRESS', '') != '':
-				wallet.send_to(getattr(settings, 'FEE_ADDRESS', ''), (self.get_shipping_price(address)+self.get_item_price()*ammount)*0.005)
-				wallet.send_to(self.seller.usershop.pay_to_address.address, (self.get_shipping_price(address)+self.get_item_price()*ammount)*0.995)
+				wallet.send_to(getattr(settings, 'FEE_ADDRESS', ''), (self.get_shipping_price(address)+self.get_item_price()*ammount)*Decimal(0.005))
+				wallet.send_to(self.seller.usershop.pay_to_address.address, (self.get_shipping_price(address)+self.get_item_price()*ammount)*Decimal(0.995))
 				fee=0.995
 			else:
 				wallet.send_to(self.seller.usershop.pay_to_address.address, (self.get_shipping_price(address)+self.get_item_price()*ammount)*1)

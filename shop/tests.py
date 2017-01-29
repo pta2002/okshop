@@ -5,8 +5,6 @@ from django.urls import reverse
 import pyotp
 
 # Create your tests here.
-# TODO: Mock okcashd
-
 class RegisterTestCase(TestCase):
 	def setUp(self):
 		self.u1 = User.objects.create_user('u1','email@example.com','')

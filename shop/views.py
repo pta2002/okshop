@@ -199,10 +199,10 @@ def api_newwallet(request):
 		_ = {
 			'label': w.label,
 			'address': w.address,
-			'balance': df.floatformat(w.get_balance()),
-			'pending': df.floatformat(w.get_pending()),
-			'totalbal': df.floatformat(request.user.userextra.get_balance()),
-			'totalpend': df.floatformat(request.user.userextra.get_pending()),
+			'balance': w.get_balance(),
+			'pending': w.get_pending(),
+			'totalbal': request.user.userextra.get_balance(),
+			'totalpend': request.user.userextra.get_pending(),
 			'id': w.id,
 		}
 		response['wallet'] = _
@@ -241,14 +241,14 @@ def api_send(request):
 		response['wallets'] = []
 		for wallet in request.user.wallet_set.filter(active=True):
 			response['wallets'].append({
-				'balance': df.floatformat(wallet.get_balance()),
-				'pending': df.floatformat(wallet.get_pending()),
+				'balance': wallet.get_balance(),
+				'pending': wallet.get_pending(),
 				'address': wallet.address,
 				'label': wallet.label,
 				'id': wallet.id,
 				})
-		response['balance'] = df.floatformat(request.user.userextra.get_balance())
-		response['pending'] = df.floatformat(request.user.userextra.get_pending())
+		response['balance'] = request.user.userextra.get_balance()
+		response['pending'] = request.user.userextra.get_pending()
 
 	return JsonResponse(response)
 
@@ -678,7 +678,6 @@ def upload_pic(request):
 @login_required
 def delete_pic(request, uuid):
 	pic = get_object_or_404(ProductImage, uuid=uuid)
-	print(type(pic))
 	pic.delete()
 	return JsonResponse({'status': 'ok'})
 
@@ -715,4 +714,5 @@ def change_password(request):
 
 @login_required
 def edit_product(request, id):
-	pass
+	product = get_object_or_404(Product, id=id, seller=request.user)
+	return render(request, 'shop/editproduct.html', {'product': product})
