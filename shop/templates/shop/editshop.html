@@ -1,0 +1,63 @@
+{% extends "shop/base.html" %}
+{% block title %}{{ shop.user.username }}'s shop{% endblock %}
+{% block body %}
+<div class="row">
+	<div class="col-md-3">
+		<h2>{{ shop.user }}</h2>
+		<form action="{% url 'shop:editshop' %}" method="POST">
+			{% csrf_token %}
+			<div class="form-group">
+				<label for="description" class="control-label">Description</label>
+				<textarea class="form-control vresize" id="description" name="description" placeholder="Description">{{ shop.description }}</textarea>
+			</div>
+			<div class="form-group">
+				<label for="address" class="control-label">Pay to wallet</label>
+				<select name="address" id="address" class="form-control">
+					{% for address in addresses %}
+					<option value="{{ address.id }}" {% if address == shop.pay_to_address %}select="selected"{% endif %}>{{ address.label }}</option>
+					{% endfor %}
+				</select>
+			</div>
+			{% if shop.can_customcss %}
+			<div class="form-group">
+				<label for="css" class="control-label">Custom CSS</label>
+				<textarea class="form-control vresize" id="css" name="css" placeholder="Description">{{ shop.custom_css }}</textarea>
+			</div>
+			{% endif %}
+			<input type="submit" class="btn btn-primary btn-block" value="Done!">
+		</form>
+	</div>
+	<div class="col-md-9">
+		<a href="{% url 'shop:sellproduct' %}" class="btn btn-block btn-primary product">Sell new item</a>
+		{% if shop.user.product_set.count > 0 %}
+		{% for product in shop.user.product_set.all %}
+		<div class="panel panel-default">
+			<div class="panel-body">
+				<div class="col-md-3">
+					<img src="{{ product.productimage_set.first.image.url }}" alt="{{ product.product_name }}" class="img-responsive">
+				</div>
+				<div class="col-md-9">
+					<div class="product-name">
+						<a class="cart-product-name" href="{% url 'shop:viewproduct' product.id %}">{{ product }}</a> for <span class="price">{{ product.price|floatformat }}</span> {{ product.price_currency }}.
+					</div>
+					<div class="info">
+						{{ product.stock }} in stock. <br>
+						Product is {% if product.physical %}physical{% else %}digital{% endif %}.
+					</div>
+				</div>
+			</div>
+		</div>
+		{% endfor %}
+		{% else %}
+		There's nothing here!
+		{% endif %}
+	</div>
+</div>
+{% endblock %}
+{% if shop.can_customcss %}
+{% block customhead %}
+<style>
+	{{ shop.custom_css }}
+</style>
+{% endblock %}
+{% endif %}

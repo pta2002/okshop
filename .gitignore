@@ -11,7 +11,9 @@ __pycache__/
 local_settings.py
 db.sqlite3
 media
-
+venv
+okshop
+error.html
 
 ### Python ###
 # Byte-compiled / optimized / DLL files
