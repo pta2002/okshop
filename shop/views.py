@@ -256,8 +256,7 @@ def api_checkaddress(request):
 	response = {'status':""}
 	errors = []
 	if 'address' in request.GET:
-		rpc = cm.get_rpc()
-		validate = rpc.validateaddress(request.GET['address'])
+		validate = cm.validateaddress(request.GET['address'])
 
 		if validate['isvalid']:
 			response['valid'] = True

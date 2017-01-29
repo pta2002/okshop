@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/okcashpro/okshop.svg?branch=master)](https://travis-ci.org/okcashpro/okshop)
+
 # OKShop
 This is a cryptocurrency shop originally made for the [OKCash](https://okcash.co) cryptocurrency. The store is estimated to launch on [okcart.net](https://okcart.net) on February 1, 2017.
 

@@ -8,6 +8,9 @@ python:
 env:
   - DJANGO=1.10 DJANGO_SETTINGS_MODULE=shop.test_settings
 
+before_install:
+  - sudo apt-add-repository ppa:bitcoin/bitcoin -y
+
 install:
   - pip install -q Django==$DJANGO
   - pip install -q .

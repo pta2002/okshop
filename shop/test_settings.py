@@ -9,7 +9,9 @@ https://docs.djangoproject.com/en/1.10/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.10/ref/settings/
 """
+import sys
 
+TESTING = len(sys.argv) > 1 and sys.argv[1] == 'test'
 import os
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)

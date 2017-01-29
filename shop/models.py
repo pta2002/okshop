@@ -39,9 +39,9 @@ class Product(models.Model):
 	product_description = models.TextField()
 	approved = models.BooleanField(default=True)
 
-	price = models.DecimalField(max_digits=2**32, decimal_places=8)
+	price = models.DecimalField(max_digits=2**16, decimal_places=8)
 	price_currency = models.CharField(max_length=16, default='OK')
-	cached_rate = models.DecimalField(blank=True, null=True, max_digits=2**32, decimal_places=8)
+	cached_rate = models.DecimalField(blank=True, null=True, max_digits=2**16, decimal_places=8)
 	rate_lastupdated = models.DateTimeField(default=timezone.now)
 
 	physical = models.BooleanField(default=0)
@@ -54,8 +54,8 @@ class Product(models.Model):
 	free_shipping = models.BooleanField(default=False)
 	worldwide_shipping = models.BooleanField(default=False)
 	ships_from = CountryField(null=True, blank=True)
-	local_price = models.DecimalField(max_digits=2**32, decimal_places=8, default=0)
-	outside_price = models.DecimalField(max_digits=2**32, decimal_places=8, default=0)
+	local_price = models.DecimalField(max_digits=2**16, decimal_places=8, default=0)
+	outside_price = models.DecimalField(max_digits=2**16, decimal_places=8, default=0)
 
 	redeeming_instructions = models.TextField(default='', blank=True, null=True)
 	unlimited_stock = models.BooleanField(default=False)
@@ -288,7 +288,7 @@ class UserExtra(models.Model):
 		return PurchaseItem.objects.filter(purchase__by=self.user, product=item).count() == 0
 
 class Wallet(models.Model):
-	redeemed = models.DecimalField(max_digits=2**32, decimal_places=8, default=0)
+	redeemed = models.DecimalField(max_digits=2**16, decimal_places=8, default=0)
 	user = models.ForeignKey(User)
 	label = models.CharField(max_length=30)
 	active = models.BooleanField(default=True)
@@ -298,12 +298,10 @@ class Wallet(models.Model):
 		return '%s: %s' % (self.user.username, self.label)
 
 	def get_balance(self):
-		rpc = cm.get_rpc()
-		return rpc.getreceivedbyaddress(self.address, 3)-self.redeemed
+		return cm.getreceivedbyaddress(self.address, 3)-self.redeemed
 
 	def get_pending(self):
-		rpc = cm.get_rpc()
-		return rpc.getreceivedbyaddress(self.address, 0)-self.get_balance()-self.redeemed
+		return cm.getreceivedbyaddress(self.address, 0)-self.get_balance()-self.redeemed
 
 	def send_to(self, address, ammount):
 		response = {}
@@ -323,10 +321,9 @@ class Wallet(models.Model):
 				errors.append('Not enough funds!')
 		else:
 			if self.get_balance() - ammount - 1 >= 0:
-				rpc = cm.get_rpc()
-				rpc.settxfee(1)
+				cm.settxfee(1)
 				try:
-					rpc.sendtoaddress(address, ammount)
+					cm.sendtoaddress(address, ammount)
 					self.redeemed += ammount + 1
 					self.save()
 				except:
@@ -394,13 +391,13 @@ class Purchase(models.Model):
 
 class PurchaseItem(models.Model):
 	product = models.ForeignKey(Product)
-	price = models.DecimalField(max_digits=2**32, decimal_places=8)
+	price = models.DecimalField(max_digits=2**16, decimal_places=8)
 	quantity = models.IntegerField(default=1)
 	gift = models.BooleanField(default=False)
 	purchase = models.ForeignKey(Purchase)
 	address = models.ForeignKey(PhysicalAddress, blank=True, null=True)
-	shipping_price = models.DecimalField(max_digits=2**32, decimal_places=8, default=0)
-	fee = models.DecimalField(max_digits=2**32, decimal_places=8, default=0.995)
+	shipping_price = models.DecimalField(max_digits=2**16, decimal_places=8, default=0)
+	fee = models.DecimalField(max_digits=2**16, decimal_places=8, default=0.995)
 
 	def done(self):
 		return self.shippingupdate_set.filter(done=True).count() > 0
@@ -440,8 +437,8 @@ class Checkout(models.Model):
 	user = models.ForeignKey(User)
 	wallet = models.ForeignKey(Wallet, blank=True, null=True)
 	shipping = models.ForeignKey(PhysicalAddress, blank=True, null=True)
-	cached_price = models.DecimalField(max_digits=2**32, decimal_places=8, blank=True, null=True)
-	cached_shipping = models.DecimalField(max_digits=2**32, decimal_places=8, blank=True, null=True)
+	cached_price = models.DecimalField(max_digits=2**16, decimal_places=8, blank=True, null=True)
+	cached_shipping = models.DecimalField(max_digits=2**16, decimal_places=8, blank=True, null=True)
 
 	def buy(self):
 		purchase = Purchase(by=self.user, shipped_to=self.shipping)
