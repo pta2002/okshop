@@ -7,7 +7,9 @@ django-sendfile==0.3.11
 ecdsa==0.13
 gevent==1.2.1
 greenlet==0.4.11
+olefile==0.44
 packaging==16.8
+Pillow==4.0.0
 pluggy==0.4.0
 py==1.4.32
 pyjsonrpc==0.0.2
