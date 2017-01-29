@@ -61,3 +61,6 @@ class RegisterTestCase(TestCase):
 
 		for m in list(response.context['messages']):
 			self.assertNotEqual(m.tags, 'success')
+
+class LoginTestCase(TestCase):
+	pass
