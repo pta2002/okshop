@@ -8,6 +8,7 @@ This is a cryptocurrency shop originally made for the [OKCash](https://okcash.co
  - pyotp
  - qrcode
  - cryptonator
+ - python-bitcoinrpc
  
 This app also requires a running OKCash daemon.
 
