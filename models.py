@@ -105,8 +105,10 @@ class Product(models.Model):
 			if getattr(settings, 'FEE_ADDRESS', '') != '':
 				wallet.send_to(getattr(settings, 'FEE_ADDRESS', ''), (self.get_shipping_price(address)+self.get_item_price()*ammount)*0.005)
 				wallet.send_to(self.seller.usershop.pay_to_address.address, (self.get_shipping_price(address)+self.get_item_price()*ammount)*0.995)
+				fee=0.995
 			else:
 				wallet.send_to(self.seller.usershop.pay_to_address.address, (self.get_shipping_price(address)+self.get_item_price()*ammount)*1)
+				fee=1
 			if not self.unlimited_stock: 
 				self.stock -= ammount
 			self.save()
@@ -116,7 +118,7 @@ The user %s has purchased your product, %s.
 We recommend you get in contact with the buyer as fast as possible.
 
 Thanks for selling with OKCart!""" % (self.seller.username, wallet.user.username, self.product_name), "no_reply@okcart.net", [self.seller.email])
-			return PurchaseItem(product=self, gift=gift, price=self.get_item_price(), quantity=ammount, shipping_price=self.get_shipping_price(address), address=address)
+			return PurchaseItem(product=self, gift=gift, price=self.get_item_price(), quantity=ammount, shipping_price=self.get_shipping_price(address), address=address, fee=fee)
 
 	def get_earnings(self):
 		s = 0
@@ -398,6 +400,7 @@ class PurchaseItem(models.Model):
 	purchase = models.ForeignKey(Purchase)
 	address = models.ForeignKey(PhysicalAddress, blank=True, null=True)
 	shipping_price = models.DecimalField(max_digits=2**32, decimal_places=8, default=0)
+	fee = models.DecimalField(max_digits=2**32, decimal_places=8, default=0.995)
 
 	def done(self):
 		return self.shippingupdate_set.filter(done=True).count() > 0
@@ -501,7 +504,7 @@ class UserShop(models.Model):
 	def get_earnings(self):
 		s = 0
 		for p in PurchaseItem.objects.filter(product__seller=self.user):
-			s += p.price
+			s += p.price * p.fee
 		return s
 
 	def get_purchases(self):
