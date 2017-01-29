@@ -6,8 +6,7 @@ python:
   - "3.6"
 
 env:
-  - DJANGO=1.10
-  - DJANGO_SETTINGS_MODULE=shop.test_settings
+  - DJANGO=1.10 DJANGO_SETTINGS_MODULE=shop.test_settings
 
 install:
   - pip install -q Django==$DJANGO
