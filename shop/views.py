@@ -578,9 +578,10 @@ def sell_new_product(request):
 	if request.method == 'POST':
 		# Get ready for all the ifs!
 		errors = []
+
 		if request.POST.get('product-name', '').strip() == '':
 			errors.append("Product name can't be empty!")
-		if (not request.POST.get('unlimited', 'off') == 'on'):
+		if 'unlimited' in request.POST:
 			try:
 				stock = int(request.POST.get('stock', 0))
 				if stock < 0:
@@ -598,14 +599,14 @@ def sell_new_product(request):
 			rate = cryptonator.get_exchange_rate(cur, 'ok')
 		except cryptonator.CryptonatorException:
 			errors.append("Currency doesn't exist!")
-		if request.POST.get('is-physical', 'on') == 'on':
+		if 'is-physical' in request.POST:
 			if request.POST.get('ships-from', 'US') not in dict(countries):
 				errors.append('%s is not a country!' % request.POST.get('ships-from', 'US'))
-			if not request.POST.get('worldwide-shipping', 'on') == 'on':
-				for country in request.POST.get('countries', []):
+			if not 'worldwideshipping' in request.POST:
+				for country in request.POST.getlist('countries', []):
 					if country not in dict(countries):
 						errors.append('%s is not a country!' % country)
-			if not request.POST.get('free-shipping', 'off') == 'on':
+			if 'free-shipping' in request.POST:
 				try:
 					local_shipping = Decimal(request.POST.get('local-price', 0))
 					if local_shipping < 0:
@@ -633,11 +634,11 @@ def sell_new_product(request):
 				product_description=request.POST.get('description', '').strip(),
 				price=Decimal(request.POST.get('price', 0)),
 				price_currency=request.POST.get('currency', 'OK').strip(),
-				physical=request.POST.get('is-physical', 'on') == 'on',
+				physical='is-physical' in request.POST,
 				stock=int(request.POST.get('stock', 0)),
 				seller=request.user,
-				free_shipping=request.POST.get('free-shipping', 'off') == 'on',
-				unlimited_stock=request.POST.get('unlimited', 'off') == 'on'
+				free_shipping='free-shipping' in request.POST,
+				unlimited_stock='unlimited' in request.POST
 				)
 			p.save()
 			for i in imgs:
@@ -646,10 +647,10 @@ def sell_new_product(request):
 			if p.physical:
 				p.local_price = Decimal(request.POST.get('local-price', 0))
 				p.global_price = Decimal(request.POST.get('global-price', 0))
-				p.worldwide_shipping = request.POST.get('worldwide-shipping', 'on') == 'on'
+				p.worldwide_shipping = 'worldwideshipping' in request.POST
 				p.ships_from = request.POST.get('ships-from', 'US').strip()
 				p.save()
-				for country in request.POST.get('countries', []):
+				for country in request.POST.getlist('countries', []):
 					if country not in dict(countries):
 						c = ShippingCountry(country=country, product=p)
 						c.save()
@@ -668,6 +669,8 @@ def upload_pic(request):
 	for pic in request.FILES.getlist('pics'):
 		try:
 			p = ProductImage(image=pic)
+			if request.POST.get('product', '') != '':
+				p.product == get_object_or_404(Product, id=request.POST.get('product', ''), seller=request.user)
 			p.save()
 			response['images'].append({'url': p.image.url,'id': p.id, 'delete': p.uuid})
 		except:
@@ -678,8 +681,11 @@ def upload_pic(request):
 @login_required
 def delete_pic(request, uuid):
 	pic = get_object_or_404(ProductImage, uuid=uuid)
-	pic.delete()
-	return JsonResponse({'status': 'ok'})
+	if pic.prodcut is None or pic.product.seller == request.user:
+		pic.delete()
+		return JsonResponse({'status': 'ok'})
+	else:
+		return JsonResponse({'status': 'error', 'error': 403})
 
 @login_required
 def change_password(request):
@@ -715,4 +721,74 @@ def change_password(request):
 @login_required
 def edit_product(request, id):
 	product = get_object_or_404(Product, id=id, seller=request.user)
-	return render(request, 'shop/editproduct.html', {'product': product})
+	shipping_countries = []
+	for country in countries:
+		shipping_countries.append({'country': country, 'ships': product.ships_to_country(country)})
+
+	if request.method == 'POST':
+		errors = []
+
+		if 0 < len(request.POST.get('product-name', '')) <= 140:
+			product.product_name = request.POST.get('product-name', '')
+		else:
+			errors.append('Invalid product name')
+		product.product_description = request.POST.get('description', '')
+		product.unlimited_stock = request.POST.get('unlimited', 'off') == 'on'
+		try:
+			stock = int(request.POST.get('stock', 0))
+			if stock < 0:
+				errors.append('Stock has to be at least 0')
+			else:
+				product.stock = stock 
+		except ValueError:
+			pass
+		try:
+			price = Decimal(request.POST.get('price', 0))
+			if price < 0:
+				errors.append('Price has to be at least 0')
+			else:
+				product.price = price
+		except ValueError:
+			pass
+		try:
+			cur = request.POST.get('currency', 'ok').strip()
+			rate = cryptonator.get_exchange_rate(cur, 'ok')
+			if rate:
+				product.price_currency = cur
+		except cryptonator.CryptonatorException:
+			errors.append("Currency doesn't exist!")
+
+		if product.physical:
+			if request.POST.get('ships-from', 'US') not in dict(countries):
+				errors.append('%s is not a country!' % request.POST.get('ships-from', 'US'))
+			else:
+				product.ships_from = request.POST.get('ships-from', 'US')
+
+			if not request.POST.get('worldwide-shipping', 'on') == 'on':
+
+				for country in request.POST.getlist('countries', []):
+					if country not in dict(countries):
+						errors.append('%s is not a country!' % country)
+			else:
+				product.worldwide_shipping = True
+			if not request.POST.get('free-shipping', 'off') == 'on':
+				try:
+					local_shipping = Decimal(request.POST.get('local-price', 0))
+					if local_shipping < 0:
+						errors.append("Local shipping price must be at least 0")
+				except ValueError:
+					errors.append("Local shipping price must be at least 0")
+				try:
+					global_shipping = Decimal(request.POST.get('global-price', 0))
+					if global_shipping < 0:
+						errors.append("Global shipping price must be at least 0")
+				except ValueError:
+					errors.append("Global shipping price must be at least 0")
+
+		if not errors:
+			product.save()
+			messages.success(request, 'Product edited!')
+		for error in errors:
+			messages.warning(request, error)
+
+	return render(request, 'shop/editproduct.html', {'product': product, 'countries': countries, 'shipping_countries': shipping_countries})

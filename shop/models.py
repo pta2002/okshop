@@ -142,6 +142,9 @@ Thanks for selling with OKCart!""" % (self.seller.username, wallet.user.username
 		self.cached_rate = cryptonator.get_exchange_rate(self.price_currency, 'ok')
 		self.save()
 
+	def ships_to_country(self, country):
+		return ShippingCountry.objects.filter(product=self, country=country).count()
+
 class ShippingCountry(models.Model):
 	product = models.ForeignKey(Product)
 	country = CountryField()
