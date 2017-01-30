@@ -77,7 +77,7 @@ class Product(models.Model):
 	def ships_to(self, address):
 		if self.worldwide_shipping  or not self.physical:
 			return True
-		if self.shippingcountry_set.filter(country=address.country).count() >= 1:
+		if self.shippingcountry_set.filter(country=address.country[0]).count() >= 1:
 			return True
 		return False
 
@@ -143,7 +143,7 @@ Thanks for selling with OKCart!""" % (self.seller.username, wallet.user.username
 		self.save()
 
 	def ships_to_country(self, country):
-		return ShippingCountry.objects.filter(product=self, country=country).count()
+		return self.shippingcountry_set.filter(country=country[0]).count() > 0
 
 class ShippingCountry(models.Model):
 	product = models.ForeignKey(Product)

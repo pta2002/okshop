@@ -651,7 +651,7 @@ def sell_new_product(request):
 				p.ships_from = request.POST.get('ships-from', 'US').strip()
 				p.save()
 				for country in request.POST.getlist('countries', []):
-					if country not in dict(countries):
+					if country in dict(countries):
 						c = ShippingCountry(country=country, product=p)
 						c.save()
 			p.save()
@@ -764,26 +764,57 @@ def edit_product(request, id):
 			else:
 				product.ships_from = request.POST.get('ships-from', 'US')
 
-			if not request.POST.get('worldwide-shipping', 'on') == 'on':
-
+			if 'worldwide-shipping' not in request.POST:
+				for p in product.shippingcountry_set.all():
+					p.delete()
 				for country in request.POST.getlist('countries', []):
 					if country not in dict(countries):
 						errors.append('%s is not a country!' % country)
+					else:
+						sc = ShippingCountry(product=product, country=country)
+						sc.save()
 			else:
 				product.worldwide_shipping = True
-			if not request.POST.get('free-shipping', 'off') == 'on':
+			if 'free-shipping' not in request.POST:
 				try:
 					local_shipping = Decimal(request.POST.get('local-price', 0))
 					if local_shipping < 0:
 						errors.append("Local shipping price must be at least 0")
-				except ValueError:
+					else:
+						product.local_price = local_shipping
+				except:
 					errors.append("Local shipping price must be at least 0")
 				try:
 					global_shipping = Decimal(request.POST.get('global-price', 0))
 					if global_shipping < 0:
 						errors.append("Global shipping price must be at least 0")
-				except ValueError:
+					else: 
+						product.outside_price = global_shipping
+				except:
 					errors.append("Global shipping price must be at least 0")
+
+		if len(request.POST.getlist('images', [])):
+			t_pic = False
+			for i in request.POST.getlist('images', []):
+				if ProductImage.objects.filter(uuid=i).count() > 0:
+					t_pic = True
+					break
+			if t_pic:
+				for i in request.POST.getlist('images', []):
+					try:
+						p = ProductImage.objects.get(uuid=i)
+						if p.product is None:
+							p.product = product
+							p.save()
+					except:
+						pass
+				for i in product.productimage_set.all():
+					if i.uuid not in request.POST.getlist('images', []):
+						i.delete()
+			else:
+				errors.append("At least one image is required")
+		else:
+			errors.append("At least one image is required")
 
 		if not errors:
 			product.save()
