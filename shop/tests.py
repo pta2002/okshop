@@ -173,7 +173,7 @@ class TestUploadFiles(TestCase):
 	def test_upload_all_fine(self):
 		self.client.login(username=self.u1.username, password='passw0rd')
 		r = self.client.post(reverse('shop:uploadfile', kwargs={'id': self.p1.id}), {'file': SimpleUploadedFile("file.txt", b"t", content_type="text/txt"), 'name': 's'})
-		rjson = json.loads(r.content)
+		rjson = json.loads(str(r.content))
 		file = DigitalFile.objects.get(id=rjson['file'])
 
 		self.assertEqual(file.file.read(), b't')
