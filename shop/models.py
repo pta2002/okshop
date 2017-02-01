@@ -520,7 +520,9 @@ class DigitalFile(models.Model):
 		return '%s: %s' % (self.product.product_name, self.name)
 
 	def owned_by(self, u):
-		return PurchaseItem.objects.filter(purchase__by=u, product=self.product).count() > 0
+		if PurchaseItem.objects.filter(purchase__by=u, product=self.product).count() > 0:
+			return True
+		return self.product.seller == u
 
 	def get_file_name(self):
 		return self.name.lower().replace(' ', '_') + '.' + self.file.path.split('.')[-1]

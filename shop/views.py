@@ -3,7 +3,8 @@ from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth import logout, authenticate, login
 from django.contrib import messages
-from django.http import HttpResponse, JsonResponse, Http404
+from django.http import HttpResponse, JsonResponse, Http404, HttpResponseForbidden, HttpResponseNotFound, HttpResponseBadRequest
+from django.core.exceptions import PermissionDenied
 from django.template import defaultfilters as df
 from django.conf import settings
 from django.db import models
@@ -823,3 +824,23 @@ def edit_product(request, id):
 			messages.warning(request, error)
 
 	return render(request, 'shop/editproduct.html', {'product': product, 'countries': countries, 'shipping_countries': shipping_countries})
+
+@login_required
+def edit_keys(request, id):
+	product = get_object_or_404(Product, seller=request.user, id=id, physical=False)
+	return render(request, 'shop/editkeys.html', {'product': product})
+
+@login_required
+def upload_file(request, id):
+	product = get_object_or_404(Product, id=id)
+	if product.seller != request.user:
+		return HttpResponseForbidden(content_type="application/json", content=json.dumps({'status':403, 'error': 'You don\'t control this product'}))
+	if 'file' in request.FILES and 0 < len(request.POST.get('name', '')) <= 200:
+		if request.FILES['file'].size < 104857600:
+			f = DigitalFile(product=product, file=request.FILES['file'], name=request.POST.get('name', ''), description=request.POST.get('description', ''))
+			f.save()
+			return JsonResponse({'status':200, 'file': f.id})
+		else:
+			return HttpResponseBadRequest(content_type="application/json", content=json.dumps({'status':400, 'error': 'File too large'}))
+	else:
+		return HttpResponseBadRequest(content_type="application/json", content=json.dumps({'status':400, 'error': 'Bad request'}))

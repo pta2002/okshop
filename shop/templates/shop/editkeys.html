@@ -1,0 +1,16 @@
+{% extends "shop/base.html" %}
+{% block title %}Manage keys and files{% endblock %}
+{% block body %}
+<div class="row">
+	<div class="col-sm-8">
+		<h1 style="margin-top: 0">Keys and files: "{{ product }}"</h1>
+	</div>
+	<div class="col-sm-4">
+		<a href="{% url 'shop:viewproduct' product.id %}" class="btn btn-default">View product</a>
+		<a href="{% url 'shop:editproduct' product.id %}" class="btn btn-default">Edit product</a>
+	</div>
+</div>
+<div class="panel panel-body">
+	
+</div>
+{% endblock %}

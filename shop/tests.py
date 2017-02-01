@@ -2,7 +2,10 @@ from django.test import TestCase, Client
 from django.contrib.auth.models import User
 from .models import *
 from django.urls import reverse
+from django.core.files.uploadedfile import SimpleUploadedFile, InMemoryUploadedFile
+from io import BytesIO
 import pyotp
+import json
 
 # Create your tests here.
 class RegisterTestCase(TestCase):
@@ -116,3 +119,62 @@ class LoginTestCase(TestCase):
 
 		for m in list(response.context['messages']):
 			self.assertNotEqual(m.tags, 'success')
+
+class TestUploadFiles(TestCase):
+	def setUp(self):
+		self.u1 = User.objects.create_user('__u1','','passw0rd')
+		ue1 = UserExtra(user=self.u1, verified=True)
+		ue1.save()
+		self.u1.save()
+
+		self.p1 = Product(product_name='T', product_description='d', price=0, physical=False, seller=self.u1)
+		self.p1.save()
+
+		self.u2 = User.objects.create_user('__u2', '', 'passw0rd')
+		ue2 = UserExtra(user=self.u2, verified=True)
+		ue2.save()
+		self.u2.save()
+
+	def test_upload_product_not_found(self):
+		self.client.login(username=self.u1.username, password='passw0rd')
+		r = self.client.post(reverse('shop:uploadfile', kwargs={'id': '291827346271725623'}), {'file': SimpleUploadedFile("file.txt", b"t", content_type="text/txt"), 'name': 'n'})
+		self.assertEqual(r.status_code, 404)
+
+	def test_upload_product_not_logged_in(self):
+		r = self.client.post(reverse('shop:uploadfile', kwargs={'id': self.p1.id}), {'file': SimpleUploadedFile("file.txt", b"t", content_type="text/txt"), 'name': 'n'})
+		self.assertNotEqual(r.status_code, 200)
+
+	def test_upload_product_no_permission(self):
+		self.client.login(username=self.u2.username, password='passw0rd')
+		r = self.client.post(reverse('shop:uploadfile', kwargs={'id': self.p1.id}), {'file': SimpleUploadedFile("file.txt", b"t", content_type="text/txt"), 'name': 'n'})
+		self.assertEqual(r.status_code, 403)
+
+	def test_upload_incomplete_request(self):
+		self.client.login(username=self.u1.username, password='passw0rd')
+		r = self.client.post(reverse('shop:uploadfile', kwargs={'id': self.p1.id}), {})
+		self.assertEqual(r.status_code, 400)
+
+	def test_upload_name_too_big(self):
+		self.client.login(username=self.u1.username, password='passw0rd')
+		r = self.client.post(reverse('shop:uploadfile', kwargs={'id': self.p1.id}), {'file': SimpleUploadedFile("file.txt", b"t", content_type="text/txt"), 'name': 'a'*201})
+		self.assertEqual(r.status_code, 400)
+
+	def test_upload_no_name(self):
+		self.client.login(username=self.u1.username, password='passw0rd')
+		r = self.client.post(reverse('shop:uploadfile', kwargs={'id': self.p1.id}), {'file': SimpleUploadedFile("file.txt", b"t", content_type="text/txt"), 'name': ''})
+		self.assertEqual(r.status_code, 400)
+
+	# Can't seem to fake file size... I'll have to rely on my intuition
+	"""def test_upload_file_too_large(self):
+					self.client.login(username=self.u1.username, password='passw0rd')
+					r = self.client.post(reverse('shop:uploadfile', kwargs={'id': self.p1.id}), {'file': InMemoryUploadedFile(BytesIO(b"d"), None, 'file.txt', "text/txt", 10**10, None, None), 'name': 's'})
+					self.assertEqual(r.status_code, 400)"""
+
+	def test_upload_all_fine(self):
+		self.client.login(username=self.u1.username, password='passw0rd')
+		r = self.client.post(reverse('shop:uploadfile', kwargs={'id': self.p1.id}), {'file': SimpleUploadedFile("file.txt", b"t", content_type="text/txt"), 'name': 's'})
+		rjson = json.loads(r.content)
+		file = DigitalFile.objects.get(id=rjson['file'])
+
+		self.assertEqual(file.file.read(), b't')
+		self.assertEqual(r.status_code, 200)

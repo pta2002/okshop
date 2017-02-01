@@ -31,6 +31,9 @@
 			</div>
 			<div class="panel-footer">
 				<a href="{% url 'shop:editproduct' product.id %}" class="btn btn-default">Edit</a>
+				{% if not product.physical %}
+				<a href="{% url 'shop:editkeys' product.id %}" class="btn btn-default">Manage keys and files</a>
+				{% endif %}
 			</div>
 		</div>
 		{% endfor %}

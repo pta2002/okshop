@@ -7,6 +7,7 @@ urlpatterns = [
 	url(r'^product/(?P<id>\d*[1-9]\d*)/$', views.view_product, name='viewproduct'),
 	url(r'^product/(?P<id>\d*[1-9]\d*)/addtocart/$', views.add_to_cart, name='addtocart'),
 	url(r'^product/(?P<id>\d*[1-9]\d*)/edit/$', views.edit_product, name='editproduct'),
+	url(r'^product/(?P<id>\d*[1-9]\d*)/edit/keys/$', views.edit_keys, name='editkeys'),
 	url(r'^shop/(?P<user>[A-Za-z0-9\-\_]{1,150})/$', views.shop, name='shop'),
 	url(r'^me/cart/$', views.view_cart, name='cart'),
 	url(r'^me/cart/remove/(?P<id>\d*[1-9]\d*)/$', views.remove_cart, name='removecart'),
@@ -39,4 +40,5 @@ urlpatterns = [
 	url(r'^api/qrcode/$', views.qr_code, name='qrcode'),
 	url(r'^api/uploadpic/$', views.upload_pic, name='uploadpic'),
 	url(r'^api/deletepic/(?P<uuid>[A-Za-z0-9\-\_]{36})/$', views.delete_pic, name='deletepic'),
+	url(r'^api/uploadfile/(?P<id>\d*[1-9]\d*)/$', views.upload_file, name='uploadfile')
 ]

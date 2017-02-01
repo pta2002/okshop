@@ -2,13 +2,15 @@
 {% block title %}Edit product{% endblock %}
 {% block body %}
 <div class="row">
-	<div class="col-sm-6">
+	<div class="col-sm-8">
 		<h1 style="margin-top: 0">Edit "{{ product }}"</h1>
 	</div>
-	<div class="col-sm-6">
+	<div class="col-sm-4">
 		<a href="{% url 'shop:viewproduct' product.id %}" class="btn btn-default">View product</a>
+		{% if not product.physical %}
+		<a href="{% url 'shop:editkeys' product.id %}" class="btn btn-default">Manage keys and files</a>
+		{% endif %}
 	</div>
-	
 </div>
 
 <form action="{% url 'shop:editproduct' product.id %}" method="POST">
