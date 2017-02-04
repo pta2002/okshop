@@ -17,6 +17,7 @@
 	<div class="panel-body">
 		<p>You can upload files up to 50MB in size for your buyers to download.</p>
 
+		{% if product.digitalfile_set.all %}
 		<h4>Your files</h4>
 		{% for file in product.digitalfile_set.all %}
 		<div class="row list-with-lines">
@@ -24,10 +25,32 @@
 				<a href="{% url 'shop:download' file.id %}">{{ file.name }}</a> <em>{{ file.file.size|filesizeformat }}</em>
 			</div>
 			<div class="col-sm-2">
-				<a class="btn btn-default"><i class="fa fa-trash"></i> Delete</a>
+				<button class="btn btn-default" data-toggle="modal" data-target="#modal-{{file.id}}"><i class="fa fa-trash"></i> Delete</button>
 			</div>
 		</div>
 		{% endfor %}
+		{% endif %}
 	</div>
 </div>
+{% endblock %}
+{% block modals %}
+{% for file in product.digitalfile_set.all %}
+<div class="modal fade" id="modal-{{file.id}}" aria-labelledby="modal-{{file.id}}-label" tabindex="-1" role="dialog">
+	<div class="modal-dialog" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" data-dismiss="modal" aria-label="Close" class="close"><span aria-hidden="true">&times;</span></button>
+				<h4 class="modal-title" id="modal-{{file.id}}-label">Confirm deletion</h4>
+			</div>
+			<div class="modal-body">
+				<strong>Are you sure you want to delete {{ file.name }}?</strong>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+				<a href="{% url 'shop:deletefile' file.id %}" class="btn btn-danger">Delete</a>
+			</div>
+		</div>
+	</div>
+</div>
+{% endfor %}
 {% endblock %}
