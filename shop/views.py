@@ -847,6 +847,24 @@ def upload_file(request, id):
 		return HttpResponseBadRequest(content_type="application/json", content=json.dumps({'status':400, 'error': 'Bad request'}))
 
 @login_required
+def upload_file_noapi(request, id):
+	product = get_object_or_404(Product, id=id, physical=False, seller=request.user)
+	if 'file' in request.FILES and 0 < len(request.POST.get('name', '')) <= 200:
+		if request.FILES['file'].size < 52428800: #50MB
+			f = DigitalFile(product=product, file=request.FILES['file'], name=request.POST.get('name', ''), description=request.POST.get('description', ''))
+			f.save()
+			messages.success(request, "Uploaded file")
+		else:
+			messages.warning(request, "File too large.")
+	else:
+		if 'file' not in request.FILES:
+			messages.warning(request, "File is required")
+		if not (0 < len(request.POST.get('name', '')) <= 200):
+			messages.warning(request, "Name must be between 1 and 200 characters")
+	print(request.FILES)
+	return redirect('shop:editkeys', id)
+
+@login_required
 def delete_file(request, id):
 	file = get_object_or_404(DigitalFile, id=id)
 	if file.product.seller == request.user:
