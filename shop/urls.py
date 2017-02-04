@@ -40,5 +40,6 @@ urlpatterns = [
 	url(r'^api/qrcode/$', views.qr_code, name='qrcode'),
 	url(r'^api/uploadpic/$', views.upload_pic, name='uploadpic'),
 	url(r'^api/deletepic/(?P<uuid>[A-Za-z0-9\-\_]{36})/$', views.delete_pic, name='deletepic'),
-	url(r'^api/uploadfile/(?P<id>\d*[1-9]\d*)/$', views.upload_file, name='uploadfile')
+	url(r'^api/uploadfile/(?P<id>\d*[1-9]\d*)/$', views.upload_file, name='uploadfile'),
+	url(r'^api/deletefile/(?P<id>\d*[1-9]\d*)/$', views.delete_file, name='deletefile'),
 ]

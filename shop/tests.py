@@ -180,3 +180,42 @@ class TestUploadFiles(TestCase):
 						
 								self.assertEqual(file.file.read(), b't')"""
 		self.assertEqual(r.status_code, 200)
+
+class TestDeleteFile(TestCase):
+	def setUp(self):
+		self.u1 = User.objects.create_user('___u1','','passw0rd')
+		ue1 = UserExtra(user=self.u1, verified=True)
+		ue1.save()
+		self.u1.save()
+
+		self.u2 = User.objects.create_user('___u2','','passw0rd')
+		ue2 = UserExtra(user=self.u2, verified=True)
+		ue2.save()
+		self.u1.save()
+
+		self.p1 = Product(product_name='T', product_description='d', price=0, physical=False, seller=self.u1)
+		self.p1.save()
+
+		self.file1 = DigitalFile(file=SimpleUploadedFile("file.txt", b"t", content_type="text/txt"), name='test', product=self.p1)
+		self.file1.save()
+		self.file2 = DigitalFile(file=SimpleUploadedFile("file.txt", b"t", content_type="text/txt"), name='test', product=self.p1)
+		self.file2.save()
+
+	def test_file_not_logged_in(self):
+		r = self.client.get(reverse('shop:deletefile', kwargs={'id': self.file1.id}))
+		self.assertNotEqual(r.status_code, 200)
+
+	def test_file_no_permission(self):
+		self.client.login(username=self.u2.username, password='passw0rd')
+		r = self.client.get(reverse('shop:deletefile', kwargs={'id': self.file1.id}))
+		self.assertEqual(r.status_code, 403)
+
+	def test_file_not_exists(self):
+		self.client.login(username=self.u1.username, password='passw0rd')
+		r = self.client.get(reverse('shop:deletefile', kwargs={'id': 2912787347128272}))
+		self.assertEqual(r.status_code, 404)
+
+	def test_file_all_fine(self):
+		self.client.login(username=self.u1.username, password='passw0rd')
+		r = self.client.get(reverse('shop:deletefile', kwargs={'id': self.file2.id}), follow=True)
+		self.assertEqual(r.status_code, 200)

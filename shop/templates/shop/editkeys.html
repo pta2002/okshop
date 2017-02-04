@@ -10,7 +10,24 @@
 		<a href="{% url 'shop:editproduct' product.id %}" class="btn btn-default">Edit product</a>
 	</div>
 </div>
-<div class="panel panel-body">
-	
+<div class="panel panel-default">
+	<div class="panel-heading">
+		<h4>Files</h4>
+	</div>
+	<div class="panel-body">
+		<p>You can upload files up to 50MB in size for your buyers to download.</p>
+
+		<h4>Your files</h4>
+		{% for file in product.digitalfile_set.all %}
+		<div class="row list-with-lines">
+			<div class="col-sm-10">
+				<a href="{% url 'shop:download' file.id %}">{{ file.name }}</a> <em>{{ file.file.size|filesizeformat }}</em>
+			</div>
+			<div class="col-sm-2">
+				<a class="btn btn-default"><i class="fa fa-trash"></i> Delete</a>
+			</div>
+		</div>
+		{% endfor %}
+	</div>
 </div>
 {% endblock %}

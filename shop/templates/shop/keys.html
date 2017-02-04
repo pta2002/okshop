@@ -52,10 +52,12 @@
 				{% endif %}
 			</div>
 		</div>
+		{% if purchase.product.redeeming_instructions %}
 		<div class="col-md-4">
 			<h3>Instructions:</h3>
 			<p class="description">{{purchase.product.redeeming_instructions}}</p>
 		</div>
+		{% endif %}
 	</div>
 </div>
 {% endfor %}

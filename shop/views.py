@@ -831,12 +831,13 @@ def edit_keys(request, id):
 	return render(request, 'shop/editkeys.html', {'product': product})
 
 @login_required
+@csrf_exempt
 def upload_file(request, id):
-	product = get_object_or_404(Product, id=id)
+	product = get_object_or_404(Product, id=id, physical=False)
 	if product.seller != request.user:
 		return HttpResponseForbidden(content_type="application/json", content=json.dumps({'status':403, 'error': 'You don\'t control this product'}))
 	if 'file' in request.FILES and 0 < len(request.POST.get('name', '')) <= 200:
-		if request.FILES['file'].size < 104857600:
+		if request.FILES['file'].size < 52428800: #50MB
 			f = DigitalFile(product=product, file=request.FILES['file'], name=request.POST.get('name', ''), description=request.POST.get('description', ''))
 			f.save()
 			return JsonResponse({'status':200, 'file': f.id})
@@ -844,3 +845,13 @@ def upload_file(request, id):
 			return HttpResponseBadRequest(content_type="application/json", content=json.dumps({'status':400, 'error': 'File too large'}))
 	else:
 		return HttpResponseBadRequest(content_type="application/json", content=json.dumps({'status':400, 'error': 'Bad request'}))
+
+@login_required
+def delete_file(request, id):
+	file = get_object_or_404(DigitalFile, id=id)
+	if file.product.seller == request.user:
+		file.delete()
+		messages.success(request, "Successfully deleted %s" % file.name)
+		return redirect('shop:editkeys', id=file.product.id)
+	else:
+		return HttpResponseForbidden(content_type="application/json", content=json.dumps({'status':403, 'error':'You don\'t have permission for this.'}))
