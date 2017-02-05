@@ -41,7 +41,7 @@
 						<a class="cart-product-name" href="{% url 'shop:viewproduct' product.id %}">{{ product }}</a> for <span class="price">{{ product.price|floatformat }}</span> {{ product.price_currency }}.
 					</div>
 					<div class="info">
-						{{ product.stock }} in stock. <br>
+						{% if product.unlimited_stock %}Unlimited{% else %}{{ product.stock }} in{% endif %} stock. <br>
 						Product is {% if product.physical %}physical{% else %}digital{% endif %}.
 					</div>
 				</div>
