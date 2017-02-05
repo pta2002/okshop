@@ -1,4 +1,4 @@
 include LICENSE
-include README.rst
+include README.md
 recursive-include shop/static *
 recursive-include shop/templates *
