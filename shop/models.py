@@ -31,8 +31,8 @@ def send_confirmation_email(user):
 		body = """
 		Hello, %s! To complete your registration on OKShop, please verify your email by clicking the following link:
 		https://%s%s
-		""" % (user.username, reverse('shop:verifyemail', kwargs={'uuid': v.verify_url}))
-		send_mail('Complete your OKShop registration!', getattr(settings, 'URL', 'okcart.net') body, 'no-reply@okcash.net', [user.email])
+		""" % (user.username, getattr(settings, 'URL', 'okcart.net'), reverse('shop:verifyemail', kwargs={'uuid': v.verify_url}))
+		send_mail('Complete your OKShop registration!', body, 'no-reply@okcash.net', [user.email])
 
 class Product(models.Model):
 	product_name = models.CharField(max_length=140) # If you can't fit your product's name into a tweet you need a better name...

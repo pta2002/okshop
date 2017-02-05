@@ -64,7 +64,7 @@
 			{% endif %}
 		{% endif %}
 		{% else %}
-		{% if not user.is_authenticated %}
+		{% if user.is_authenticated %}
 		<a href="#" disabled class="btn btn-primary btn-disabled btn-block">ALREADY OWNED</a>
 		{% else %}
 		<a href="{% url 'shop:login' %}" class="btn btn-default btn-block">LOG IN TO BUY</a>
