@@ -873,3 +873,7 @@ def delete_file(request, id):
 		return redirect('shop:editkeys', id=file.product.id)
 	else:
 		return HttpResponseForbidden(content_type="application/json", content=json.dumps({'status':403, 'error':'You don\'t have permission for this.'}))
+
+def view_reviews(request, id):
+	product = get_object_or_404(Product, id=id)
+	

@@ -29,7 +29,7 @@ class KeySetAdmin(admin.ModelAdmin):
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-	list_display = ('product_name', 'seller', 'price', 'stock', 'physical', 'approved')
+	list_display = ('product_name', 'seller', 'get_rating', 'price', 'stock', 'physical', 'approved')
 	list_filter = ('approved', 'physical','worldwide_shipping','free_shipping')
 	fieldsets = (
 		('Product info', {'fields': ('product_name', 'product_description', ('price', 'price_currency', 'cached_rate'), 'seller')}),
@@ -94,6 +94,14 @@ class PurchaseAdmin(admin.ModelAdmin):
 	)
 
 	inlines = [PurchaseItemInline]
+
+class ReviewVoteInline(admin.TabularInline):
+	model = ReviewVote
+
+@admin.register(Review)
+class ReviewAdmin(admin.ModelAdmin):
+	list_display = ('product', 'title', 'get_score', 'get_percentage')
+	inlines = [ReviewVoteInline]
 
 admin.site.register(UserShop)
 admin.site.register(ShippingUpdate)

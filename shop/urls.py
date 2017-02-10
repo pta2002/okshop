@@ -5,6 +5,7 @@ app_name='shop'
 urlpatterns = [
 	url(r'^$', views.homepage, name='homepage'),
 	url(r'^product/(?P<id>\d*[1-9]\d*)/$', views.view_product, name='viewproduct'),
+	url(r'^product/(?P<id>\d*[1-9]\d*)/reviews/$', views.view_reviews, name='reviews'),
 	url(r'^product/(?P<id>\d*[1-9]\d*)/addtocart/$', views.add_to_cart, name='addtocart'),
 	url(r'^product/(?P<id>\d*[1-9]\d*)/edit/$', views.edit_product, name='editproduct'),
 	url(r'^product/(?P<id>\d*[1-9]\d*)/edit/keys/$', views.edit_keys, name='editkeys'),

@@ -145,6 +145,11 @@ Thanks for selling with OKCart!""" % (self.seller.username, wallet.user.username
 	def ships_to_country(self, country):
 		return self.shippingcountry_set.filter(country=country[0]).count() > 0
 
+	def get_rating(self):
+		return 0
+
+	get_rating.short_description = 'rating'
+
 class ShippingCountry(models.Model):
 	product = models.ForeignKey(Product)
 	country = CountryField()
@@ -569,3 +574,44 @@ class ShippingUpdate(models.Model):
 
 	def __str__(self):
 		return self.short_update
+
+
+class Review(models.Model):
+	product = models.ForeignKey(Product)
+	user = models.ForeignKey(User)
+	title = models.CharField(max_length=150, default='')
+	review = models.TextField(default='')
+	rating = models.IntegerField() # 0-5
+
+	def get_score(self):
+		s = 0
+		for vote in self.reviewvote_set.all():
+			if vote.up:
+				s += 1
+			else:
+				s -= 1
+		return s
+	get_score.short_description = 'score'
+
+	def get_percentage(self):
+		s = []
+		for vote in self.reviewvote_set.all():
+			if vote.up:
+				s.append(1)
+			else:
+				s.append(0)
+		return sum(s) / float(len(s))
+	get_percentage.short_description = 'helpfulness'
+
+	def __str__(self):
+		return self.title
+
+class ReviewVote(models.Model):
+	review = models.ForeignKey(Review)
+	up = models.BooleanField(default=True) # True: Upvote False: Downvote
+	user = models.ForeignKey(User)
+
+	def __str__(self):
+		if self.up:
+			return "Upvote on %s" % self.review.title
+		return "Downvote on %s" % self.review.title
