@@ -109,7 +109,7 @@ class Product(models.Model):
 			else:
 				wallet.send_to(self.seller.usershop.pay_to_address.address, (self.get_shipping_price(address)+self.get_item_price()*ammount)*1)
 				fee=1
-			if not self.unlimited_stock: 
+			if not self.unlimited_stock:
 				self.stock -= ammount
 			self.save()
 			send_mail("Someone bought one of your items!", """Hello %s,
@@ -493,7 +493,7 @@ Thanks for buying with OKCart!""" % (self.user.username, reverse('shop:purchase'
 
 
 	def __str__(self):
-		return self.uuid 
+		return self.uuid
 
 
 class UserShop(models.Model):
@@ -601,7 +601,9 @@ class Review(models.Model):
 				s.append(1)
 			else:
 				s.append(0)
-		return sum(s) / float(len(s))
+		if len(s) > 0:
+			return sum(s) / float(len(s))
+		return .5
 	get_percentage.short_description = 'helpfulness'
 
 	def __str__(self):

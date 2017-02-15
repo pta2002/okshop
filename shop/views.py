@@ -6,6 +6,7 @@ from django.contrib import messages
 from django.http import HttpResponse, JsonResponse, Http404, HttpResponseForbidden, HttpResponseNotFound, HttpResponseBadRequest
 from django.core.exceptions import PermissionDenied
 from django.template import defaultfilters as df
+from django.utils import timezone
 from django.conf import settings
 from django.db import models
 from django_countries import countries
@@ -20,10 +21,13 @@ from PIL import Image
 # Create your views here.
 def view_product(request, id):
 	product = get_object_or_404(Product, id=id)
+	reviews = sorted(product.review_set.all(), key=lambda t: (t.get_percentage() * t.get_score())/((timezone.now()-t.date).days+1))
+
 	if request.user.is_authenticated:
 		cart = Cart.objects.get(user=request.user)
-		return render(request, "shop/product.html", {'product': product, 'incart': cart.in_cart(product), 'can_buy': request.user.userextra.can_purchase_item(product)})
-	return render(request, "shop/product.html", {'product': product})
+		return render(request, "shop/product.html", {'reviews': reviews, 'product': product, 'incart': cart.in_cart(product), 'can_buy': request.user.userextra.can_purchase_item(product)})
+
+	return render(request, "shop/product.html", {'product': product, 'reviews': reviews})
 
 @login_required
 def view_cart(request):
@@ -372,7 +376,7 @@ def authorize(request, forid):
 				messages.warning(request, "Wrong 2FA code")
 		else:
 			messages.warning(request, "Incorrect password.")
-	
+
 	return render(request, 'shop/confirmpassword.html')
 
 
@@ -740,7 +744,7 @@ def edit_product(request, id):
 			if stock < 0:
 				errors.append('Stock has to be at least 0')
 			else:
-				product.stock = stock 
+				product.stock = stock
 		except ValueError:
 			pass
 		try:
@@ -789,7 +793,7 @@ def edit_product(request, id):
 					global_shipping = Decimal(request.POST.get('global-price', 0))
 					if global_shipping < 0:
 						errors.append("Global shipping price must be at least 0")
-					else: 
+					else:
 						product.outside_price = global_shipping
 				except:
 					errors.append("Global shipping price must be at least 0")
@@ -876,4 +880,3 @@ def delete_file(request, id):
 
 def view_reviews(request, id):
 	product = get_object_or_404(Product, id=id)
-	

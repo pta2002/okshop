@@ -75,6 +75,20 @@
 		{% endif %}
 	</div>
 </div>
+<div class="row">
+	<h2>Reviews</h2>
+	{% if reviews %}
+	{% for review in reviews %}
+	<div class="panel panel-default">
+		<div class="panel-heading">
+			<h4>{{ review.title }} - {{ review.rating }}/5</h4>
+		</div>
+	</div>
+	{% endfor %}
+	{% else %}
+	This product has no reviews
+	{% endif %}
+</div>
 {% endblock %}
 {% block extrascripts %}
 {% load static %}
