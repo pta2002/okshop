@@ -6,10 +6,10 @@
 	<div class="panel-heading">
 		<div class="row">
 			<div class="col-sm-2">
-				EARNINGS: {{ user.usershop.get_earnings|floatformat }} OK
+				EARNINGS: {% if user.usershop.get_earnings|floatformat %}{{ user.usershop.get_earnings|floatformat }}{%else%}0{% endif %} OK
 			</div>
 			<div class="col-sm-2">
-				<a href="{% url 'shop:sales' %}">SALES: {{ user.usershop.get_purchases.count }}</a>
+				<a href="{% url 'shop:sales' %}">SALES: {% if user.usershop.get_purchases.count %}{{ user.usershop.get_purchases.count }}{% else %}0{% endif %}</a>
 			</div>
 		</div>
 	</div>

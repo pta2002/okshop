@@ -582,6 +582,7 @@ class Review(models.Model):
 	title = models.CharField(max_length=150, default='')
 	review = models.TextField(default='')
 	rating = models.IntegerField() # 0-5
+	date = models.DateTimeField(default=timezone.now)
 
 	def get_score(self):
 		s = 0
