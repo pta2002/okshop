@@ -146,6 +146,11 @@ Thanks for selling with OKCart!""" % (self.seller.username, wallet.user.username
 		return self.shippingcountry_set.filter(country=country[0]).count() > 0
 
 	def get_rating(self):
+		s = []
+		for review in self.review_set.all():
+			s.append(review.rating)
+		if len(s):
+			return sum(s) / len(s)
 		return 0
 
 	get_rating.short_description = 'rating'
@@ -599,7 +604,15 @@ class Review(models.Model):
 
 	def get_ordering(self, mode='relevant'):
 		if mode == 'relevant':
-			return (self.get_percentage()*self.get_score())/((timezone.now()-self.date).days+1)
+			return (self.get_score()+1)/((timezone.now()-self.date).days+1)
+		elif mode == 'new':
+			return (self.date-timezone.now()).seconds
+		elif mode == 'old':
+			return (timezone.now()-self.date).seconds
+		elif mode == 'score':
+			return self.get_score()
+		elif mode == 'hated':
+			return -self.get_score()
 
 	def get_upvotes(self):
 		return self.reviewvote_set.filter(up=True).count()

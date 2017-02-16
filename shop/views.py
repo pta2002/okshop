@@ -21,7 +21,7 @@ from PIL import Image
 # Create your views here.
 def view_product(request, id):
 	product = get_object_or_404(Product, id=id)
-	reviews = sorted(product.review_set.all(), key=lambda t: t.get_ordering())
+	reviews = sorted(product.review_set.all(), key=lambda t: -t.get_ordering())
 	for review in reviews:
 		review.upvoted = review.is_upvoted_by(request.user)
 		review.downvoted = review.is_downvoted_by(request.user)

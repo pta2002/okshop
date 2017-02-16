@@ -40,6 +40,14 @@
 				</td>
 			</tr>
 			<tr>
+				<td>Rating</td>
+				{% if product.review_set.all.count == 0 %}
+				<td>No reviews</td>
+				{% else %}
+				<td>{{ product.get_rating }}/5</td>
+				{% endif %}
+			</tr>
+			<tr>
 				<td>Type</td>
 				<td>{% if product.physical %}Physical{% else %}Digital{%endif%}</td>
 			</tr>
