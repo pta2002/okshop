@@ -585,11 +585,17 @@ class Review(models.Model):
 	date = models.DateTimeField(default=timezone.now)
 
 	def is_upvoted_by(self, user):
-		return self.reviewvote_set.filter(user=user, up=True).count() > 0
+		if user.is_authenticated():
+			return self.reviewvote_set.filter(user=user, up=True).count() > 0
+		return False
 	def is_downvoted_by(self, user):
-		return self.reviewvote_set.filter(user=user, up=False).count() > 0
+		if user.is_authenticated():
+			return self.reviewvote_set.filter(user=user, up=False).count() > 0
+		return False
 	def is_voted_by(self, user):
-		return self.reviewvote_set.filter(user=user).count() > 0
+		if user.is_authenticated():
+			return self.reviewvote_set.filter(user=user).count() > 0
+		return False
 
 	def get_ordering(self, mode='relevant'):
 		if mode == 'relevant':
