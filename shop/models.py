@@ -584,6 +584,22 @@ class Review(models.Model):
 	rating = models.IntegerField() # 0-5
 	date = models.DateTimeField(default=timezone.now)
 
+	def is_upvoted_by(self, user):
+		return self.reviewvote_set.filter(user=user, up=True).count() > 0
+	def is_downvoted_by(self, user):
+		return self.reviewvote_set.filter(user=user, up=False).count() > 0
+	def is_voted_by(self, user):
+		return self.reviewvote_set.filter(user=user).count() > 0
+
+	def get_ordering(self, mode='relevant'):
+		if mode == 'relevant':
+			return (self.get_percentage()*self.get_score())/((timezone.now()-self.date).days+1)
+
+	def get_upvotes(self):
+		return self.reviewvote_set.filter(up=True).count()
+	def get_downvotes(self):
+		return self.reviewvote_set.filter(up=False).count()
+
 	def get_score(self):
 		s = 0
 		for vote in self.reviewvote_set.all():
@@ -605,6 +621,9 @@ class Review(models.Model):
 			return sum(s) / float(len(s))
 		return .5
 	get_percentage.short_description = 'helpfulness'
+
+	def get_percentage_100(self):
+		return self.get_percentage()*100
 
 	def __str__(self):
 		return self.title

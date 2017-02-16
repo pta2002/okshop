@@ -21,7 +21,10 @@ from PIL import Image
 # Create your views here.
 def view_product(request, id):
 	product = get_object_or_404(Product, id=id)
-	reviews = sorted(product.review_set.all(), key=lambda t: (t.get_percentage() * t.get_score())/((timezone.now()-t.date).days+1))
+	reviews = sorted(product.review_set.all(), key=lambda t: t.get_ordering())
+	for review in reviews:
+		review.upvoted = review.is_upvoted_by(request.user)
+		review.downvoted = review.is_downvoted_by(request.user)
 
 	if request.user.is_authenticated:
 		cart = Cart.objects.get(user=request.user)
@@ -395,8 +398,12 @@ def shop(request, user):
 	try:
 		usershop = get_object_or_404(UserShop, user__username=user)
 	except Http404:
-		if request.user.username == user:
-			return redirect('shop:editshop')
+		if User.objects.filter(username=user).count() > 0:
+			if request.user.username == user:
+				return redirect('shop:editshop')
+			us = UserShop(user=User.objects.get(username=user))
+			us.save()
+			return render(request, 'shop/shoppage.html', {'shop': us})
 		else:
 			raise Http404()
 
@@ -880,3 +887,28 @@ def delete_file(request, id):
 
 def view_reviews(request, id):
 	product = get_object_or_404(Product, id=id)
+
+@login_required
+def toggle_vote(request, id, vote):
+	review = get_object_or_404(Review, id=id)
+
+	if ReviewVote.objects.filter(user=request.user, review=review).count():
+		rv = ReviewVote.objects.get(user=request.user, review=review)
+		rv.delete()
+		if rv.up == (vote=='up'):
+			if 'next' in request.GET and request.GET['next'] != '':
+				return redirect(request.GET['next'])
+			else:
+				return redirect(review.product)
+	rv = ReviewVote(user=request.user, review=review)
+
+	if vote == 'up':
+		rv.up = True
+	else:
+		rv.up = False
+
+	rv.save()
+	if 'next' in request.GET and request.GET['next'] != '':
+		return redirect(request.GET['next'])
+	else:
+		return redirect(review.product)

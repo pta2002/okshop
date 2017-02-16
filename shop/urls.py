@@ -1,3 +1,4 @@
+
 from django.conf.urls import url
 from . import views
 
@@ -44,4 +45,5 @@ urlpatterns = [
 	url(r'^api/deletepic/(?P<uuid>[A-Za-z0-9\-\_]{36})/$', views.delete_pic, name='deletepic'),
 	url(r'^api/uploadfile/(?P<id>\d*[1-9]\d*)/$', views.upload_file, name='uploadfile'),
 	url(r'^api/deletefile/(?P<id>\d*[1-9]\d*)/$', views.delete_file, name='deletefile'),
+	url(r'^api/vote/(?P<id>\d*[1-9]\d*)/(?P<vote>up|down)', views.toggle_vote, name='togglevote')
 ]
