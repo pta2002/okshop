@@ -1,11 +1,11 @@
 <!--
-	##########
+		##########
    #          #
    #    OK    #
    #          #
    #          #
     ##########
-Yes, that's the best I can do, sorry ¯\_(ツ)_/¯ 
+Yes, that's the best I can do, sorry ¯\_(ツ)_/¯
 -->
 
 <!DOCTYPE html>
@@ -66,6 +66,7 @@ Yes, that's the best I can do, sorry ¯\_(ツ)_/¯
 			{% if messages %}
 			{% for message in messages %}
 			<div class="alert alert-{{ message.tags }} alert-dismissable">
+				<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
 				{{ message }}
 			</div>
 			{% endfor %}
@@ -79,7 +80,7 @@ Yes, that's the best I can do, sorry ¯\_(ツ)_/¯
 	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
 	<script>
 		$(document).ready(function(){
-		    $('[data-toggle="tooltip"]').tooltip(); 
+		    $('[data-toggle="tooltip"]').tooltip();
 		});
 	</script>
 	{% block extrascripts %}{% endblock %}
