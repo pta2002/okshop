@@ -177,7 +177,7 @@ class TestUploadFiles(TestCase):
 		#TODO: Get this to work on py3.5
 		"""rjson = json.loads(str(r.content))
 								file = DigitalFile.objects.get(id=rjson['file'])
-						
+
 								self.assertEqual(file.file.read(), b't')"""
 		self.assertEqual(r.status_code, 200)
 
@@ -219,3 +219,33 @@ class TestDeleteFile(TestCase):
 		self.client.login(username=self.u1.username, password='passw0rd')
 		r = self.client.get(reverse('shop:deletefile', kwargs={'id': self.file2.id}), follow=True)
 		self.assertEqual(r.status_code, 200)
+
+class CheckoutTestCase(TestCase):
+	def setUp(self):
+		self.u1 = User.objects.create_user('____u1', 'passw0rd')
+		ue1=UserExtra(user=self.u1, verified=True)
+		ue1.save()
+		w = Wallet(user=self.u1)
+		w.save()
+		self.p1 = Product(product_name='t', seller=self.u1, price=0, physical=False)
+		self.p1.save()
+		self.expensiveproduct = Product(product_name='t', seller=self.u1, price=2**32)
+		self.expensiveproduct.save()
+
+	def test_checkout_not_logged_in(self):
+		r=self.client.get(reverse('shop:checkout'))
+		self.assertNotEqual(r.status_code, 200)
+
+	def test_checkout_cart_empty(self):
+		self.u1.userextra.clear_cart()
+		r=self.client.get(reverse('shop:checkout'))
+		self.assertNotEqual(r.status_code, 200)
+
+	def test_checkout_no_money(self):
+		self.u1.userextra.clear_cart()
+		self.u1.userextra.add_to_cart(self.expensiveproduct)
+		r=self.client.get(reverse('shop:checkout'))
+		self.assertNotEqual(r.status_code, 200)
+
+	def test_checkout_allgood(self):
+		pass

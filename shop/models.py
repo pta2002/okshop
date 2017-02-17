@@ -155,6 +155,9 @@ Thanks for selling with OKCart!""" % (self.seller.username, wallet.user.username
 
 	get_rating.short_description = 'rating'
 
+	def is_owned_by(self, user):
+		return self.purchaseitem_set.filter(purchase__by=user).count() > 0
+
 class ShippingCountry(models.Model):
 	product = models.ForeignKey(Product)
 	country = CountryField()
@@ -177,11 +180,7 @@ class Cart(models.Model):
 		return self.user.username
 
 	def in_cart(self, product):
-		for entry in self.cartentry_set.all():
-			if entry.product == product:
-				return True
-				break
-		return False
+		return self.cartentry_set.filter(product=product).count() > 0
 
 	def gettotal(self):
 		p = 0
@@ -299,6 +298,19 @@ class UserExtra(models.Model):
 			return True
 
 		return PurchaseItem.objects.filter(purchase__by=self.user, product=item).count() == 0
+
+	def clear_cart(self):
+		if hasattr(self, 'cart'):
+			self.cart.clear()
+
+	def add_to_cart(self, product, quantity=1, gift=False):
+		if not hasattr(self, 'cart'):
+			self.cart = Cart(user=self.user)
+			self.cart.save()
+		if self.cart.in_cart(product):
+			self.cart.cartentry_set.get(product=product).delete()
+		ce = CartEntry(cart=self.cart, product=product, quantity=quantity, gift=gift)
+		ce.save()
 
 class Wallet(models.Model):
 	redeemed = models.DecimalField(max_digits=2**16, decimal_places=8, default=0)

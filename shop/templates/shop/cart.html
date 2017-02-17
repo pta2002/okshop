@@ -54,7 +54,7 @@ Your cart is empty!
 		<div class="panel panel-default">
 			<div class="panel-body">
 				Total: {{ user.cart.gettotal|floatformat }} OK
-				{% if user.userextra.get_highest_balance_wallet.get_balance > user.cart.gettotal %}
+				{% if user.userextra.get_highest_balance_wallet.get_balance >= user.cart.gettotal %}
 				{% if user.cart.has_something_in_stock %}
 				<a href="{% url 'shop:checkout' %}" class="btn btn-primary btn-block">CHECKOUT</a>
 				{% else %}

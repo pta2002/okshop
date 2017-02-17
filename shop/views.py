@@ -28,7 +28,7 @@ def view_product(request, id):
 
 	if request.user.is_authenticated:
 		cart = Cart.objects.get(user=request.user)
-		return render(request, "shop/product.html", {'reviews': reviews, 'product': product, 'incart': cart.in_cart(product), 'can_buy': request.user.userextra.can_purchase_item(product)})
+		return render(request, "shop/product.html", {'reviews': reviews, 'product': product, 'incart': cart.in_cart(product), 'can_buy': request.user.userextra.can_purchase_item(product), 'owned': product.is_owned_by(request.user)})
 
 	return render(request, "shop/product.html", {'product': product, 'reviews': reviews})
 
@@ -45,8 +45,7 @@ def add_to_cart(request, id):
 			if cart.in_cart(product):
 				messages.warning(request, "Product is already in cart. Maybe you meant to change the quantity?")
 			else:
-				ce = CartEntry(product=product, cart=cart)
-				ce.save()
+				request.user.userextra.add_to_cart(product)
 				messages.success(request, "Product added to cart!")
 		else:
 			messages.warning(request, "Product is out of stock. Stop trying to cheat!")

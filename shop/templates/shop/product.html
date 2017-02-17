@@ -85,6 +85,9 @@
 </div>
 <div class="row">
 	<h2>Reviews</h2>
+	{% if owned %}
+	<a href="#">Write a review</a>
+	{% endif %}
 	{% if reviews %}
 	{% for review in reviews %}
 	<div class="panel panel-default">
