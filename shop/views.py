@@ -289,6 +289,9 @@ def my_settings(request):
 @login_required
 @auth_required(forid='checkout')
 def checkout(request):
+	if not hasattr(request.user, 'cart'):
+		c = Cart(user=request.user)
+		c.save()
 	if request.user.cart.has_something_in_stock():
 		if request.POST.get('checkout', False) and request.user.checkout_set.filter(uuid=request.POST.get('checkout', '')).count() >= 1:
 			chkout = request.user.checkout_set.get(uuid=request.POST.get('checkout'))
@@ -304,7 +307,6 @@ def checkout(request):
 						if t:
 							return redirect('shop:cart')
 				elif 'use_custom_address' in request.POST and 'zip' in request.POST and 'address1' in request.POST and 'country' in request.POST and 'state' in request.POST and 'name' in request.POST:
-					print('ddd')
 					if 0 < len(request.POST['zip'].strip()) <= 15 and 0 < len(request.POST['name'].strip()) <= 200 and request.POST['address1'].strip() != '' and request.POST['country'].strip() in dict(countries) and request.POST['state'].strip() != '':
 						a = PhysicalAddress(user=request.user, zipcode=request.POST['zip'], address1=request.POST['address1'], name=request.POST['name'], country=request.POST['country'], state=request.POST['state'])
 						if request.POST.get('address2', '').strip() != '':
@@ -338,15 +340,19 @@ def checkout(request):
 			for address in request.user.wallet_set.filter(active=True):
 				if address.get_balance() >= chkout.get_price():
 					addresses.append(address)
-			print(addresses, len(addresses), chkout.step)
-
-		if chkout.step == 1 and len(addresses) == 1:
-			chkout.step = 2
-			chkout.wallet = addresses[0]
-			print(chkout.wallet)
-		elif chkout.step == 1 and len(addresses) == 0:
-			messages.warning(request, "Not enough balance!")
-			return redirect("shop:cart")
+			if not chkout.wallet:
+				if len(addresses) == 1 or chkout.get_price() == Decimal(0):
+					if chkout.get_price() == Decimal(0) and len(addresses) == 0:
+						a = Wallet(user=request.user, label='default')
+						a.save()
+						chkout.wallet = a
+					else:
+						if chkout.step == 1:
+							chkout.step = 2
+						chkout.wallet = addresses[0]
+				else:
+					messages.warning(request, "Not enough balance!")
+					return redirect("shop:cart")
 
 		chkout.save()
 

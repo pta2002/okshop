@@ -222,30 +222,119 @@ class TestDeleteFile(TestCase):
 
 class CheckoutTestCase(TestCase):
 	def setUp(self):
-		self.u1 = User.objects.create_user('____u1', 'passw0rd')
+		self.u1 = User.objects.create_user('____u1', '','passw0rd')
+		self.u1.save()
+		self.u2 = User.objects.create_user('____u2', '', 'passw0rd')
+		self.u2.save()
+		self.u3 = User.objects.create_user('____u3', '', 'passw0rd')
+		self.u3.save()
 		ue1=UserExtra(user=self.u1, verified=True)
 		ue1.save()
+		ue2=UserExtra(user=self.u2, verified=True)
+		ue2.save()
+		ue3=UserExtra(user=self.u3, verified=True)
+		ue3.save()
 		w = Wallet(user=self.u1)
 		w.save()
-		self.p1 = Product(product_name='t', seller=self.u1, price=0, physical=False)
+		w1 = Wallet(user=self.u2)
+		w2 = Wallet(user=self.u2, label='2')
+		w3 = Wallet(user=self.u3, label='3', redeemed=Decimal(-10000))
+		w4 = Wallet(user=self.u3, label='3', redeemed=Decimal(-500))
+		w1.save()
+		w2.save()
+		w3.save()
+		w4.save()
+		self.p1 = Product(product_name='t', seller=self.u1, price=0, physical=False, stock=10)
 		self.p1.save()
-		self.expensiveproduct = Product(product_name='t', seller=self.u1, price=2**32)
+		self.p2 = Product(product_name='t', seller=self.u1, price=0, physical=True, stock=10, worldwide_shipping=True, free_shipping=True)
+		self.p2.save()
+		self.expensiveproduct = Product(product_name='t', seller=self.u1, price=2**32, stock=10)
 		self.expensiveproduct.save()
+		self.reasonableproduct = Product(product_name='t', seller=self.u1, price=10, stock=10)
+		self.reasonableproduct.save()
+		self.outofstock = Product(product_name='t', seller=self.u1, price=0, stock=0)
+		self.outofstock.save()
 
 	def test_checkout_not_logged_in(self):
 		r=self.client.get(reverse('shop:checkout'))
 		self.assertNotEqual(r.status_code, 200)
 
 	def test_checkout_cart_empty(self):
+		self.client.login(username=self.u1.username, password='passw0rd')
 		self.u1.userextra.clear_cart()
 		r=self.client.get(reverse('shop:checkout'))
 		self.assertNotEqual(r.status_code, 200)
 
 	def test_checkout_no_money(self):
+		self.client.login(username=self.u1.username, password='passw0rd')
 		self.u1.userextra.clear_cart()
 		self.u1.userextra.add_to_cart(self.expensiveproduct)
 		r=self.client.get(reverse('shop:checkout'))
 		self.assertNotEqual(r.status_code, 200)
 
-	def test_checkout_allgood(self):
-		pass
+	def test_checkout_outofstock(self):
+		self.client.login(username=self.u1.username, password='passw0rd')
+		self.u1.userextra.clear_cart()
+		self.u1.userextra.add_to_cart(self.outofstock)
+		r=self.client.get(reverse('shop:checkout'))
+		self.assertNotEqual(r.status_code, 200)
+
+	def test_physical_one_wallet_free(self):
+		self.client.login(username=self.u1.username, password='passw0rd')
+		self.u1.userextra.clear_cart()
+		self.u1.userextra.add_to_cart(self.p2)
+		r=self.client.get(reverse('shop:checkout'))
+		self.assertTemplateUsed(r, 'shop/checkout1.html')
+
+	def test_physical_one_wallet_free_incomplete_data(self):
+		self.client.login(username=self.u1.username, password='passw0rd')
+		self.u1.userextra.clear_cart()
+		self.u1.userextra.add_to_cart(self.p2)
+		r=self.client.get(reverse('shop:checkout'))
+		self.assertTemplateUsed(r, 'shop/checkout1.html')
+		c = r.context['checkout']
+		r=self.client.post(reverse('shop:checkout'), {'checkout': str(c.uuid)})
+		self.assertGreater(len(r.context['messages']), 0)
+
+	def test_physical_one_wallet_free_new_address(self):
+		self.client.login(username=self.u1.username, password='passw0rd')
+		self.u1.userextra.clear_cart()
+		self.u1.userextra.add_to_cart(self.p2)
+		r=self.client.get(reverse('shop:checkout'))
+		self.assertTemplateUsed(r, 'shop/checkout1.html')
+
+		c = r.context['checkout']
+		r=self.client.post(reverse('shop:checkout'), {
+			'checkout': str(c.uuid),
+			'name': "Mr. Testing",
+			'address1': "Somewhere, Norcross",
+			'state': "GA",
+			'country': "US",
+			'zip': "30092",
+			'use_custom_address': ""
+		})
+
+		self.assertTemplateUsed(r, 'shop/checkout3.html')
+		r=self.client.post(reverse('shop:checkout'), {'checkout': str(c.uuid), 'confirm': ''})
+		self.assertEqual(r.status_code, 302)
+
+	def test_digital_one_wallet_free(self):
+		self.client.login(username=self.u1.username, password='passw0rd')
+		self.u1.userextra.clear_cart()
+		self.u1.userextra.add_to_cart(self.p1)
+		r=self.client.get(reverse('shop:checkout'))
+		self.assertTemplateUsed(r, 'shop/checkout3.html')
+
+	def test_digital_multiple_wallets_free(self):
+		self.client.login(username=self.u2.username, password='passw0rd')
+		self.u2.userextra.clear_cart()
+		self.u2.userextra.add_to_cart(self.p1)
+		r=self.client.get(reverse('shop:checkout'))
+		self.assertTemplateUsed(r, 'shop/checkout3.html')
+
+	def test_digital_multiple_wallets_enough_money(self):
+		self.client.login(username=self.u3.username, password='passw0rd')
+		self.u3.userextra.clear_cart()
+		self.u3.userextra.add_to_cart(self.reasonableproduct)
+		r=self.client.get(reverse('shop:checkout'))
+		self.assertTemplateUsed(r, 'shop/checkout2.html')

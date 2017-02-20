@@ -101,6 +101,14 @@ class Product(models.Model):
 		return self.outside_price
 
 	def buy(self, address, wallet, ammount, gift=False):
+		if not hasattr(self.seller, 'usershop'):
+			if self.seller.wallet_set.filter(active=True).count() > 0:
+				a = self.seller.wallet_set.filter(active=True).first()
+			else:
+				a = Wallet(user=self.seller, label='Store payments')
+				a.save()
+			us = UserShop(user=self.seller, pay_to_address=a)
+			us.save()
 		if (self.stock >= ammount or self.unlimited_stock) and self.ships_to(address):
 			if getattr(settings, 'FEE_ADDRESS', '') != '':
 				wallet.send_to(getattr(settings, 'FEE_ADDRESS', ''), (self.get_shipping_price(address)+self.get_item_price()*ammount)*Decimal(0.005))
@@ -204,7 +212,7 @@ class Cart(models.Model):
 
 	def has_something_in_stock(self):
 		for item in self.cartentry_set.all():
-			if item.in_stock:
+			if item.in_stock():
 				return True
 				break
 		return False
@@ -510,7 +518,7 @@ Thanks for buying with OKCart!""" % (self.user.username, reverse('shop:purchase'
 
 
 	def __str__(self):
-		return self.uuid
+		return str(self.uuid)
 
 
 class UserShop(models.Model):

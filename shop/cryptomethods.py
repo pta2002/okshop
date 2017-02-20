@@ -14,7 +14,7 @@ def new_address():
 		rpc = get_rpc()
 		return rpc.getnewaddress()
 	else:
-		return bitaddress.generate_address()
+		return bitaddress.generate_address(version=0x37)
 
 def getreceivedbyaddress(address, confirms):
 	if not getattr(settings, 'TESTING', False):

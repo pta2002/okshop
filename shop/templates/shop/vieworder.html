@@ -74,7 +74,7 @@
 									<h4>{{ event.short_update }}</h4>
 								</div>
 								<div class="timeline-body">
-									<p>{{ event.update }}</p>
+									<p>{{ event.update|linebreaks }}</p>
 								</div>
 								<div class="timeline-footer">{{ event.date|date:"F jS, Y"}}</div>
 							</div>
