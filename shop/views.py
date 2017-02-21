@@ -351,8 +351,11 @@ def checkout(request):
 							chkout.step = 2
 						chkout.wallet = addresses[0]
 				else:
-					messages.warning(request, "Not enough balance!")
-					return redirect("shop:cart")
+					if chkout.step <= 1 and len(addresses) > 0:
+						chkout.step = 1
+					else:
+						messages.warning(request, "Not enough balance!")
+						return redirect("shop:cart")
 
 		chkout.save()
 
