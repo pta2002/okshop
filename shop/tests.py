@@ -473,7 +473,8 @@ class CheckoutTestCase(TestCase):
         r = self.client.get(reverse('shop:checkout'))
         self.assertTemplateUsed(r, 'shop/checkout1.html')
         c = r.context['checkout']
-        r = self.client.post(reverse('shop:checkout'), {'checkout': str(c.uuid)})
+        r = self.client.post(reverse('shop:checkout'),
+                             {'checkout': str(c.uuid)})
         self.assertGreater(len(r.context['messages']), 0)
 
     def test_physical_one_wallet_free_new_address(self):
@@ -525,3 +526,52 @@ class ReviewTestCase(TestCase):
     def setUp(self):
         # These names are getting ridiculous
         self.u1 = User.objects.create_user('______u1', '', 'passw0rd')
+        self.u1.save()
+
+        ue1 = UserExtra(user=self.u1, verified=True)
+        ue1.save()
+
+        self.p1 = Product(
+            product_name='t',
+            seller=self.u1,
+            price=0,
+            physical=False,
+            stock=10
+        )
+
+        self.p2 = Product(
+            product_name='t',
+            seller=self.u1,
+            price=0,
+            physical=False,
+            stock=10
+        )s
+
+    def test_post_not_logged_in(self):
+        self.client.logout()
+
+        r = self.client.post(reverse('shop:product',
+                                     kwargs={'id': self.p1.id}), {
+            'title': 'post_not_logged_in',
+            'rating': 3,
+            'review': 'This shouldn\'t have been posted'
+        })
+
+        self.assertEqual(r.status_code, 302)
+        self.assertEqual(0,
+                         self.p1.review_set.filter(title='post_not_logged_in')
+                         .count())
+
+    def test_post_not_owned(self):
+        self.client.login(username=self.u1.username, password='passw0rd')
+
+        r = self.client.post(reverse('shop:product',
+                                     kwargs={'id': self.p2.id}), {
+            'title': 'post_not_owned',
+            'rating': 3,
+            'review': 'This shouldn\'t have been posted'
+        })
+
+        self.assertEqual(0,
+                         self.p2.review_set.filter(title='post_not_owned')
+                         .count())
