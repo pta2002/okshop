@@ -92,7 +92,7 @@
 	{% for review in reviews %}
 	<div class="panel panel-default">
 		<div class="panel-heading">
-			<h4>{{ review.title }} - {{ review.rating }}/5</h4>
+			<h4>{% if review.title %}{{ review.title }} - {% endif %}{{ review.rating }}/5</h4>
 		</div>
 		<div class="panel-body">
 			{{ review.review|linebreaks }}

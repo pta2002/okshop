@@ -531,6 +531,18 @@ class ReviewTestCase(TestCase):
         ue1 = UserExtra(user=self.u1, verified=True)
         ue1.save()
 
+        c = Cart(user=self.u1)
+        c.save()
+
+        self.u2 = User.objects.create_user('______u2', '', 'passw0rd')
+        self.u2.save()
+
+        ue2 = UserExtra(user=self.u2, verified=True)
+        ue2.save()
+
+        c2 = Cart(user=self.u2)
+        c2.save()
+
         self.p1 = Product(
             product_name='t',
             seller=self.u1,
@@ -538,6 +550,7 @@ class ReviewTestCase(TestCase):
             physical=False,
             stock=10
         )
+        self.p1.save()
 
         self.p2 = Product(
             product_name='t',
@@ -545,12 +558,26 @@ class ReviewTestCase(TestCase):
             price=0,
             physical=False,
             stock=10
-        )s
+        )
+        self.p2.save()
+
+        self.pur = Purchase(by=self.u1)
+        self.pur.save()
+
+        pi = PurchaseItem(purchase=self.pur, price=Decimal(0), product=self.p1)
+        pi.save()
+
+        self.pur2 = Purchase(by=self.u2)
+        self.pur2.save()
+
+        pi2 = PurchaseItem(purchase=self.pur2, price=Decimal(0),
+                           product=self.p1)
+        pi2.save()
 
     def test_post_not_logged_in(self):
         self.client.logout()
 
-        r = self.client.post(reverse('shop:product',
+        r = self.client.post(reverse('shop:viewproduct',
                                      kwargs={'id': self.p1.id}), {
             'title': 'post_not_logged_in',
             'rating': 3,
@@ -565,7 +592,7 @@ class ReviewTestCase(TestCase):
     def test_post_not_owned(self):
         self.client.login(username=self.u1.username, password='passw0rd')
 
-        r = self.client.post(reverse('shop:product',
+        r = self.client.post(reverse('shop:viewproduct',
                                      kwargs={'id': self.p2.id}), {
             'title': 'post_not_owned',
             'rating': 3,
@@ -574,4 +601,96 @@ class ReviewTestCase(TestCase):
 
         self.assertEqual(0,
                          self.p2.review_set.filter(title='post_not_owned')
+                         .count())
+
+    def test_post_owned_title_too_long(self):
+        self.client.login(username=self.u1.username, password='passw0rd')
+
+        r = self.client.post(reverse('shop:viewproduct',
+                                     kwargs={'id': self.p1.id}), {
+            'title': 'a'*200,
+            'rating': 3,
+            'review': 'test_post_too_long'
+        })
+
+        self.assertEqual(0,
+                         self.p1.review_set.filter(review='test_post_too_long')
+                         .count())
+
+    def test_post_owned_rate_too_high(self):
+        self.client.login(username=self.u1.username, password='passw0rd')
+
+        r = self.client.post(reverse('shop:viewproduct',
+                                     kwargs={'id': self.p1.id}), {
+            'title': 'test_post_rate_high',
+            'rating': 6,
+            'review': 'This shouldn\'t have been posted'
+        })
+
+        self.assertEqual(0,
+                         self.p1.review_set.filter(title='test_post_rate_high')
+                         .count())
+
+    def test_post_owned_rate_too_low(self):
+        self.client.login(username=self.u1.username, password='passw0rd')
+
+        r = self.client.post(reverse('shop:viewproduct',
+                                     kwargs={'id': self.p1.id}), {
+            'title': 'test_post_rate_low',
+            'rating': 0,
+            'review': 'This shouldn\'t have been posted'
+        })
+
+        self.assertEqual(0,
+                         self.p1.review_set.filter(title='test_post_rate_low')
+                         .count())
+
+    def test_post_owned_rate_invalid(self):
+        self.client.login(username=self.u1.username, password='passw0rd')
+
+        r = self.client.post(reverse('shop:viewproduct',
+                                     kwargs={'id': self.p1.id}), {
+            'title': 'test_post_rate_bad',
+            'rating': 'neat',
+            'review': 'This shouldn\'t have been posted'
+        })
+
+        self.assertEqual(0,
+                         self.p1.review_set.filter(title='test_post_rate_bad')
+                         .count())
+
+    def test_post_owned_all_fine(self):
+        self.client.login(username=self.u1.username, password='passw0rd')
+
+        r = self.client.post(reverse('shop:viewproduct',
+                                     kwargs={'id': self.p1.id}), {
+            'title': 'test_post_fine',
+            'rating': 4,
+            'review': 'This should have been posted'
+        })
+
+        self.assertEqual(1,
+                         self.p1.review_set.filter(title='test_post_fine')
+                         .count())
+
+    def test_post_owned_edit(self):
+        self.client.login(username=self.u2.username, password='passw0rd')
+
+        self.client.post(reverse('shop:viewproduct',
+                                 kwargs={'id': self.p1.id}), {
+            'title': 't',
+            'rating': 4,
+            'review': 'This shouldn\'t have been posted'
+        })
+
+        self.client.post(reverse('shop:viewproduct',
+                                 kwargs={'id': self.p1.id}), {
+            'title': 'test_post_edit',
+            'rating': 4,
+            'review': 'This should have been posted'
+        })
+
+        self.assertEqual(0, self.p1.review_set.filter(title='t').count())
+        self.assertEqual(1,
+                         self.p1.review_set.filter(title='test_post_edit')
                          .count())

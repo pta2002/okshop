@@ -5,7 +5,7 @@ from django.contrib.auth import logout, authenticate, login
 from django.contrib import messages
 from django.http import HttpResponse, JsonResponse, Http404, \
     HttpResponseForbidden, HttpResponseNotFound, HttpResponseBadRequest
-from django.core.exceptions import PermissionDenied
+from django.core.exceptions import PermissionDenied, ObjectDoesNotExist
 from django.template import defaultfilters as df
 from django.utils import timezone
 from django.conf import settings
@@ -31,6 +31,44 @@ def view_product(request, id):
         review.upvoted = review.is_upvoted_by(request.user)
         review.downvoted = review.is_downvoted_by(request.user)
 
+    if request.method == 'POST':
+        errors = []
+
+        if not request.user.is_authenticated():
+            return redirect(reverse('shop:login') + '?next=%s' % request.path)
+
+        if not product.is_owned_by(request.user):
+            errors.append("You don't own this product!")
+
+        if 'rating' not in request.POST:
+            errors.append('Rating is a required field')
+
+        if len(request.POST.get('review', '').strip()) == 0:
+            errors.append('Review is a required field')
+
+        if len(request.POST.get('title', '')) > 150:
+            errors.append('Title must be at most 150 characters')
+
+        try:
+            if not 0 < int(request.POST.get('rating')) <= 5:
+                errors.append('Rating must be between 1 and 5')
+        except ValueError:
+            errors.append('Invalid rating')
+
+        if not errors:
+            try:
+                review = product.review_set.get(user=request.user)
+            except ObjectDoesNotExist:
+                review = Review(product=product, user=request.user)
+
+            review.title = request.POST.get('title', '')
+            review.review = request.POST.get('review').strip()
+            review.rating = request.POST.get('rating')
+            review.save()
+
+        for error in errors:
+            messages.warning(request, error)
+
     if request.user.is_authenticated:
         cart = Cart.objects.get(user=request.user)
         return render(request, "shop/product.html", {
@@ -43,6 +81,16 @@ def view_product(request, id):
 
     return render(request, "shop/product.html", {'product': product,
                                                  'reviews': reviews})
+
+
+@login_required
+def review_delete(request, id, reviewid):
+    review = get_object_or_404(Review, id=reviewid, product__id=id)
+    if review.can_delete(request.user):
+        review.delete()
+    else:
+        messages.warning(request, "You can't delete this review")
+    return redirect(request.GET.get('next', reverse(review.product)))
 
 
 @login_required
@@ -267,7 +315,7 @@ def api_send(request):
                 r = wallet.send_to(request.POST['address'], ammount)
                 if r['status'] == 'error':
                     errors += r['errors']
-            except DoesNotExist:
+            except ObjectDoesNotExist:
                 errors.append('Wallet not found')
         except decimal.InvalidOperation:
             errors.append('Invalid ammount')
@@ -556,7 +604,7 @@ def get_key(request):
                 return JsonResponse(
                     {'errors': "The seller ran out of keys." +
                      "Please try again later!"})
-        except DoesNotExist:
+        except ObjectDoesNotExist:
             return JsonResponse({'errors': "Can't find key"})
 
 
@@ -778,7 +826,7 @@ def sell_new_product(request):
             try:
                 imgs.append(ProductImage.objects.get(uuid=img,
                                                      product__isnull=True))
-            except DoesNotExist:
+            except ObjectDoesNotExist:
                 pass
         if not imgs:
             errors.append("Please upload at least one image")
@@ -978,7 +1026,7 @@ def edit_product(request, id):
                         if p.product is None:
                             p.product = product
                             p.save()
-                    except DoesNotExist:
+                    except ObjectDoesNotExist:
                         pass
                 for i in product.productimage_set.all():
                     if i.uuid not in request.POST.getlist('images', []):

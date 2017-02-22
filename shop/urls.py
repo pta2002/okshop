@@ -6,6 +6,9 @@ urlpatterns = [
     url(r'^$', views.homepage, name='homepage'),
     url(r'^product/(?P<id>\d*[1-9]\d*)/$', views.view_product,
         name='viewproduct'),
+    url(
+     r'^product/(?P<id>\d*[1-9]\d*)/reviews/(?P<reviewid>\d*[1-9]\d*)delete/$',
+     views.review_delete, name='deletereview'),
     url(r'^product/(?P<id>\d*[1-9]\d*)/reviews/$', views.view_reviews,
         name='reviews'),
     url(r'^product/(?P<id>\d*[1-9]\d*)/addtocart/$', views.add_to_cart,
@@ -64,5 +67,5 @@ urlpatterns = [
     url(r'^api/deletefile/(?P<id>\d*[1-9]\d*)/$', views.delete_file,
         name='deletefile'),
     url(r'^api/vote/(?P<id>\d*[1-9]\d*)/(?P<vote>up|down)', views.toggle_vote,
-        name='togglevote')
+        name='togglevote'),
 ]
