@@ -694,3 +694,98 @@ class ReviewTestCase(TestCase):
         self.assertEqual(1,
                          self.p1.review_set.filter(title='test_post_edit')
                          .count())
+
+
+class DeleteReviewTestCase(TestCase):
+    def setUp(self):
+        self.u1 = User.objects.create_user('_______u1', '', 'passw0rd')
+        self.u1.save()
+
+        ue1 = UserExtra(user=self.u1, verified=True)
+        ue1.save()
+
+        c = Cart(user=self.u1)
+        c.save()
+
+        self.u2 = User.objects.create_user('_______u2', '', 'passw0rd')
+        self.u2.save()
+
+        ue2 = UserExtra(user=self.u2, verified=True)
+        ue2.save()
+
+        c2 = Cart(user=self.u2)
+        c2.save()
+
+        self.p1 = Product(
+            product_name='t',
+            seller=self.u1,
+            price=0,
+            physical=False,
+            stock=10
+        )
+        self.p1.save()
+
+        self.p2 = Product(
+            product_name='t',
+            seller=self.u1,
+            price=0,
+            physical=False,
+            stock=10
+        )
+        self.p2.save()
+
+        self.r1 = Review(product=self.p1, user=self.u1, rating=4, title='r1',
+                         review='review 1')
+        self.r1.save()
+
+        self.r2 = Review(product=self.p1, user=self.u2, rating=4, title='r2',
+                         review='review 2')
+        self.r2.save()
+
+        self.r3 = Review(product=self.p1, user=self.u2, rating=4, title='r3',
+                         review='review 3')
+        self.r3.save()
+
+    def test_delete_not_logged_in(self):
+        self.client.logout()
+        r = self.client.get(reverse('shop:deletereview', kwargs={
+            'id': self.p1.id,
+            'reviewid': self.r1.id
+        }))
+
+        self.assertEqual(r.status_code, 302)
+
+        self.assertEqual(Review.objects.filter(title='r1').count(), 1)
+
+    def test_delete_no_permission(self):
+        self.client.login(username=self.u2.username, password='passw0rd')
+        r = self.client.get(reverse('shop:deletereview', kwargs={
+            'id': self.p1.id,
+            'reviewid': self.r1.id
+        }))
+
+        self.assertEqual(r.status_code, 302)
+
+        self.assertEqual(Review.objects.filter(title='r1').count(), 1)
+
+    def test_delete_poster(self):
+        self.client.login(username=self.u2.username, password='passw0rd')
+        r = self.client.get(reverse('shop:deletereview', kwargs={
+            'id': self.p1.id,
+            'reviewid': self.r2.id
+        }))
+
+        self.assertEqual(r.status_code, 302)
+
+        self.assertEqual(Review.objects.filter(title='r2').count(), 0)
+
+    def test_delete_seller(self):
+        self.client.login(username=self.u1.username, password='passw0rd')
+        r = self.client.get(reverse('shop:deletereview', kwargs={
+            'id': self.p1.id,
+            'reviewid': self.r3.id
+        }))
+
+        self.assertEqual(r.status_code, 302)
+
+        self.assertEqual(Review.objects.filter(title='r3').count(), 0)

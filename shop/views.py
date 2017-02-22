@@ -90,7 +90,10 @@ def review_delete(request, id, reviewid):
         review.delete()
     else:
         messages.warning(request, "You can't delete this review")
-    return redirect(request.GET.get('next', reverse(review.product)))
+    return redirect(request.GET.get('next', reverse('shop:viewproduct',
+                                                    kwargs={'id':
+                                                            review.product.id}
+                                                    )))
 
 
 @login_required

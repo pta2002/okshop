@@ -746,6 +746,15 @@ class Review(models.Model):
     def get_percentage_100(self):
         return self.get_percentage()*100
 
+    def can_delete(self, user):
+        if self.user == user:
+            return True
+        elif self.product.seller == user:
+            return True
+        elif user.has_perm('shop.delete_any_review'):
+            return True
+        return False
+
     def __str__(self):
         return self.title
 
