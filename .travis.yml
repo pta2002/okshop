@@ -2,6 +2,7 @@ language: python
 
 # No python2!
 python:
+  - "3.4"
   - "3.5"
   - "3.6"
 
@@ -15,5 +16,9 @@ install:
   - pip install -q Django==$DJANGO
   - pip install -q .
   - pip install -qr requirements.txt
+  - pip install coveralls
 
 script: python manage.py test
+
+after_success:
+    coveralls
