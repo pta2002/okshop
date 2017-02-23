@@ -560,9 +560,10 @@ class Checkout(models.Model):
         send_mail("Receipt for your purchase on OKCart", """Hello %s,
 
 Here's the receipt for your recent purchase on OKCart:
-https://home.pta2002.com:8000%s
+https://%s%s
 
 Thanks for buying with OKCart!""" % (self.user.username,
+                                     getattr(settings, 'URL', 'okcart.net'),
                                      reverse('shop:purchase',
                                              kwargs={'uuid': purchase.uuid})),
                   "no_reply@okcart.net", [self.user.email])
