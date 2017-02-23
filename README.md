@@ -1,8 +1,9 @@
 [![Build Status](https://travis-ci.org/okcashpro/okshop.svg?branch=master)](https://travis-ci.org/okcashpro/okshop)
 [![Coverage Status](https://coveralls.io/repos/github/okcashpro/okshop/badge.svg?branch=master)](https://coveralls.io/github/okcashpro/okshop?branch=master)
+[![Code Climate](https://codeclimate.com/github/okcashpro/okshop/badges/gpa.svg)](https://codeclimate.com/github/okcashpro/okshop)
 
 # OKShop
-This is a cryptocurrency shop originally made for the [OKCash](https://okcash.co) cryptocurrency. The store is estimated to launch on [okcart.net](https://okcart.net) on February 1, 2017.
+This is a cryptocurrency shop originally made for the [OKCash](https://okcash.co) cryptocurrency. The store is currently running on [okcart.net](https://okcart.net).
 
 ## Dependencies
  - Django
