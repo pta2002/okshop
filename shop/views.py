@@ -26,13 +26,12 @@ from PIL import Image
 # Create your views here.
 def view_product(request, id):
     product = get_object_or_404(Product, id=id)
-    reviews = sorted(product.review_set.all(), key=lambda t: -t.get_ordering())
-    for review in reviews:
-        review.upvoted = review.is_upvoted_by(request.user)
-        review.downvoted = review.is_downvoted_by(request.user)
+
 
     if request.method == 'POST':
         errors = []
+
+        print(":D")
 
         if not request.user.is_authenticated():
             return redirect(reverse('shop:login') + '?next=%s' % request.path)
@@ -69,15 +68,35 @@ def view_product(request, id):
         for error in errors:
             messages.warning(request, error)
 
-    if request.user.is_authenticated:
-        cart = Cart.objects.get(user=request.user)
-        return render(request, "shop/product.html", {
+    reviews = sorted(product.review_set.all(), key=lambda t: -t.get_ordering())
+    for review in reviews:
+        review.upvoted = review.is_upvoted_by(request.user)
+        review.downvoted = review.is_downvoted_by(request.user)
+        review.can_delete = review.can_delete(request.user)
+
+    if request.user.is_authenticated():
+        try:
+            cart = Cart.objects.get(user=request.user)
+        except ObjectDoesNotExist:
+            cart = Cart(user=user)
+            cart.save()
+
+        context = {
             'reviews': reviews,
             'product': product,
             'incart': cart.in_cart(product),
             'can_buy': request.user.userextra.can_purchase_item(product),
-            'owned': product.is_owned_by(request.user)
-        })
+            'owned': product.is_owned_by(request.user),
+            'can_review': product.is_owned_by(request.user),
+        }
+
+        try:
+            reviewed = Review.objects.get(user=request.user, product=product)
+            context['reviewed'] = reviewed
+        except ObjectDoesNotExist:
+            pass
+
+        return render(request, "shop/product.html", context)
 
     return render(request, "shop/product.html", {'product': product,
                                                  'reviews': reviews})
@@ -88,6 +107,7 @@ def review_delete(request, id, reviewid):
     review = get_object_or_404(Review, id=reviewid, product__id=id)
     if review.can_delete(request.user):
         review.delete()
+        messages.success(request, "Review deleted")
     else:
         messages.warning(request, "You can't delete this review")
     return redirect(request.GET.get('next', reverse('shop:viewproduct',

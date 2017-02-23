@@ -85,14 +85,20 @@
 </div>
 <div class="row">
 	<h2>Reviews</h2>
-	{% if owned %}
-	<a href="#">Write a review</a>
+	{% if can_review %}
+	<p>
+	    <button class="btn btn-default" data-toggle="modal" data-target="#review-modal">{% if reviewed %}Edit your{% else %}Write a{% endif %} review</button>
+	</p>
 	{% endif %}
 	{% if reviews %}
 	{% for review in reviews %}
 	<div class="panel panel-default">
 		<div class="panel-heading">
-			<h4>{% if review.title %}{{ review.title }} - {% endif %}{{ review.rating }}/5</h4>
+            <div class="row">
+                <div class="col-sm-10">
+                    <h4>{% if review.title %}{{ review.title }} - {% endif %}{{ review.rating }}/5</h4>
+                </div>
+            </div>
 		</div>
 		<div class="panel-body">
 			{{ review.review|linebreaks }}
@@ -101,6 +107,9 @@
 			<div class="row">
 				<div class="col-sm-4">
 					Posted by {{review.user.username}} on {{review.date|date:"F jS, Y"}}
+                    {% if review.can_delete %}
+                    <em><a href="{% url 'shop:deletereview' product.id review.id %}">Delete</a></em>
+                    {% endif %}
 				</div>
 				<div class="col-sm-4">
 					<em>
@@ -125,6 +134,41 @@
 	This product has no reviews
 	{% endif %}
 </div>
+{% endblock %}
+{% block modals %}
+{% if can_review %}
+<div class="modal fade" id="review-modal" tabindex="-1" role="dialog" aria-labelledby="review-label">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="review-label">{% if reviewed %}Edit your{% else %}Write a{% endif %} review</h4>
+            </div>
+            <form class="" action="{% url 'shop:viewproduct' product.id %}" method="post">
+                <div class="modal-body">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label class="control-label" for="review-title">Review title (optional)</label>
+                        <input type="text" class="form-control" id="review-title" name="title" value="{% if reviewed %}{{ reviewed.title }}{% endif %}">
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label" for="review-rating">Rating (1 to 5)</label>
+                        <input type="number" min="1" max="5" step="1" class="form-control" id="review-rating" name="rating" value="{% if reviewed %}{{ reviewed.rating }}{% endif %}">
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label" for="review-itself">Review</label>
+                        <textarea type="text" class="form-control vresize" id="review-itself" name="review">{% if reviewed %}{{ reviewed.review }}{% endif %}</textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">{% if reviewed %}Update{% else %}Post{% endif %} review</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
 {% endblock %}
 {% block extrascripts %}
 {% load static %}
