@@ -600,7 +600,7 @@ def editshop(request):
 
 
 def homepage(request):
-    return render(request, 'shop/base.html')
+    return render(request, 'shop/frontpage.html')
 
 
 @login_required

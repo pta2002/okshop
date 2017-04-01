@@ -1,3 +1,4 @@
+# pylint: disable=C0321
 from django.conf.urls import url
 from . import views
 
@@ -7,7 +8,7 @@ urlpatterns = [
     url(r'^product/(?P<id>\d*[1-9]\d*)/$', views.view_product,
         name='viewproduct'),
     url(
-     r'^product/(?P<id>\d*[1-9]\d*)/reviews/(?P<reviewid>\d*[1-9]\d*)delete/$',
+     r'^product/(?P<id>\d*[1-9]\d*)/reviews/(?P<reviewid>\d*[1-9]\d*)/delete/$',
      views.review_delete, name='deletereview'),
     url(r'^product/(?P<id>\d*[1-9]\d*)/reviews/$', views.view_reviews,
         name='reviews'),

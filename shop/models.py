@@ -769,3 +769,16 @@ class ReviewVote(models.Model):
         if self.up:
             return "Upvote on %s" % self.review.title
         return "Downvote on %s" % self.review.title
+
+
+class Tag(models.Model):
+    name = models.CharField(max_length=150)
+    nsfw = models.BooleanField(default=False)
+
+    def __str__(self):
+        return "#%s" % self.name
+
+
+class TaggedProduct(models.Model):
+    tag = models.ForeignKey(Tag)
+    product = models.ForeignKey(Product)
