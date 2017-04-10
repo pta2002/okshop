@@ -107,9 +107,6 @@
 			<div class="row">
 				<div class="col-sm-4">
 					Posted by {{review.user.username}} on {{review.date|date:"F jS, Y"}}
-                    {% if review.can_delete %}
-                    <em><a href="{% url 'shop:deletereview' product.id review.id %}">Delete</a></em>
-                    {% endif %}
 				</div>
 				<div class="col-sm-4">
 					<em>
@@ -121,6 +118,9 @@
 					</em>
 				</div>
 				<div class="col-sm-4 text-right">
+                    {% if review.can_delete %}
+                    <a href="{% url 'shop:deletereview' product.id review.id %}" class="btn btn-default"><i class="fa fa-trash"></i></a>
+                    {% endif %}
 					{% if user.is_authenticated %}
 						<a href="{% url 'shop:togglevote' review.id 'up' %}" class="btn {% if review.upvoted%}btn-success{%else%}btn-default{%endif%}"><i class="fa fa-thumbs-up"></i></a>
 						<a href="{% url 'shop:togglevote' review.id 'down' %}" class="btn {%if review.downvoted%}btn-danger{%else%}btn-default{%endif%}"><i class="fa fa-thumbs-down"></i></a>
