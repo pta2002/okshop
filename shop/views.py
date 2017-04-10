@@ -1,3 +1,4 @@
+# vim: ai ts=4 sts=4 et sw=4
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
@@ -598,9 +599,23 @@ def editshop(request):
     return render(request, 'shop/editshop.html', {'shop': us,
                                                   'addresses': addresses})
 
+class HomeSection():
+    def __init__(self, query, name):
+        self.query = query
+        self.name = name
+
+    def items(self, number=6):
+        return self.query()[:number]
+
 
 def homepage(request):
-    return render(request, 'shop/frontpage.html')
+    sections = []
+
+    new_section = HomeSection(lambda: Product.objects.all().order_by('-date'),
+                              'Recently added')
+    sections.append(new_section)
+    
+    return render(request, 'shop/frontpage.html', {'home_sections': sections})
 
 
 @login_required

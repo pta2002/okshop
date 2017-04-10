@@ -11,4 +11,25 @@
     <div><small>Alternatively, <a href="{% url 'shop:login' %}">Log in</a></small></div>
 </div>
 {% endif %}
+{% if home_sections %}
+    {% for section in home_sections %}
+        <section>
+            <h1>{{ section.name }}</h1>
+            <div class="row">
+                {% for item in section.items %}
+                    <div class="col-sm-2">
+                        <div class="panel panel-default">
+                            <div class="panel-body">
+                                <img src="{{ item.productimage_set.first.image.url}}" alt="{{ item.product_name }}" class="img-responsive">
+                                <h4><a href="{% url 'shop:viewproduct' item.id %}">{{ item.product_name }}</a></h4>
+                                <p>Sold by <a href="{% url 'shop:shop' item.seller %}">{{ item.seller }}</a></p>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </section>
+    {% endfor %}
+{% endif %}
 {% endblock %}
+
