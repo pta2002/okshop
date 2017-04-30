@@ -1,0 +1,52 @@
+This is the to-do list for okcart. Feel free to add something with a PR.
+
+* Features
+These are things that are intended to be added to okcart
+
+** TODO Search
+   Search bar would be at the top of the site, on the header. Centered, similar to
+   Amazon's.
+
+** TODO Categories/Tags
+   Already semi-implemented, but not completely
+
+*** TODO Allow users to tag their items
+
+*** TODO Subscribe to a tag
+A user could 'subscribe' to a tag, making it appear on their homepage.
+
+*** TODO Browse tags
+Allow tag browsing. Allow for multiple tags at the same time, using +.
+Example: /tags/foo would show products tagged as 'foo'.
+/tags/foo+bar would show products tagged as foo or bar
+/tags/foo-bar would show products tagged as foo and bar
+
+** TODO Analytics
+Using this, users can see how their product is doing.
+
+*** TODO Record pageviews
+Log only time, don't log with Do-Not-Track
+
+*** TODO Show pageviews
+Use chart.js or something similar.
+
+*** TODO Show purchase statistics
+
+** TODO Gifts
+A user could buy an item to someone else.
+
+*** TODO Gift to user
+Would go directly to user (user has to accept)
+
+*** TODO Gift keys
+Would give a key that could be redeemed. Use PGP.
+
+** TODO Sales
+A user can temporarily reduce the price of their product
+
+*** TODO Coupons
+Price would be reduced if a coupon code is used.
+
+** TODO Auctions
+Would work similarly to ebay. The seller can set the starting price, and users
+would bid until a time is reached, or a price is reached. 

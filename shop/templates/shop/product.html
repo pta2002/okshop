@@ -1,0 +1,189 @@
+{% extends "shop/base.html" %}
+{% block title %}{{ product.product_name }}{% endblock %}
+
+{% block body %}
+<div class="row">
+	<div class="col-md-9">
+		<h1>{{ product.product_name }}</h1>
+		<div class="row">
+			<div class="col-md-4">
+				{% if product.productimage_set.count > 0 %}
+					<div class="pic-app row">
+					{% verbatim %}
+						<ul class="col-xs-2" style="padding: 0">
+							<li v-for="(pic,index) in pics" style="display: block;">
+								<a href="#" v-on:click="selected=index"><img :src="pic" class="img-thumbnail"></a>
+							</li>
+						</ul>
+						<div class="col-xs-10">
+							<img :src="pics[selected]" class="img-responsive">
+						</div>
+					</div>
+					{% endverbatim %}
+				{% endif %}
+			</div>
+			<div class="col-md-8">
+				{{ product.product_description|linebreaks }}
+			</div>
+		</div>
+	</div>
+	<div class="col-md-3">
+		<table class="table">
+			<tr>
+				<td>Price</td>
+				<td>
+					{% if product.price_currency != 'OK' %}
+					{{ product.price|floatformat }} {{ product.price_currency }} ({{ product.get_item_price|floatformat }} OK)
+					{% else %}
+					{{ product.price|floatformat }} OK
+					{% endif %}
+				</td>
+			</tr>
+			<tr>
+				<td>Rating</td>
+				{% if product.review_set.all.count == 0 %}
+				<td>No reviews</td>
+				{% else %}
+				<td>{{ product.get_rating }}/5</td>
+				{% endif %}
+			</tr>
+			<tr>
+				<td>Type</td>
+				<td>{% if product.physical %}Physical{% else %}Digital{%endif%}</td>
+			</tr>
+			<tr>
+				<td>Stock</td>
+				<td>{% if product.unlimited_stock %}Unlimited{% else %}{{ product.stock }}{% endif %}</td>
+			</tr>
+			<tr>
+				<td>Seller</td>
+				<td><a href="{% url 'shop:shop' product.seller.username %}">{{product.seller}}</a></td>
+			</tr>
+		</table>
+		{% if can_buy %}
+		{% if not product.in_stock %}
+			<a href="#" disabled class="btn btn-primary btn-disabled btn-block">OUT OF STOCK</a>
+		{% else %}
+			{% if not incart %}
+			<a href="{% url 'shop:addtocart' product.id %}" class="btn {% if not user.is_authenticated %}btn-default{% else %}btn-primary{% endif %} btn-block">
+				{% if not user.is_authenticated %}LOGIN TO {% endif %}ADD TO CART</a>
+			{% else %}
+			<a href="#" disabled class="btn btn-primary btn-disabled btn-block">ALREADY IN CART</a>
+			{% endif %}
+		{% endif %}
+		{% else %}
+		{% if user.is_authenticated %}
+		<a href="#" disabled class="btn btn-primary btn-disabled btn-block">ALREADY OWNED</a>
+		{% else %}
+		<a href="{% url 'shop:login' %}?next={{ request.path }}" class="btn btn-default btn-block">LOG IN TO BUY</a>
+		{% endif %}
+		{% endif %}
+		{% if product.seller == user %}
+		<a href="{% url 'shop:editproduct' product.id %}" class="btn btn-default btn-block">Edit product</a>
+		{% endif %}
+	</div>
+</div>
+<div class="row">
+	<h2>Reviews</h2>
+	{% if can_review %}
+	<p>
+	    <button class="btn btn-default" data-toggle="modal" data-target="#review-modal">{% if reviewed %}Edit your{% else %}Write a{% endif %} review</button>
+	</p>
+	{% endif %}
+	{% if reviews %}
+	{% for review in reviews %}
+	<div class="panel panel-default">
+		<div class="panel-heading">
+            <div class="row">
+                <div class="col-sm-10">
+                    <h4>{% if review.title %}{{ review.title }} - {% endif %}{{ review.rating }}/5</h4>
+                </div>
+            </div>
+		</div>
+		<div class="panel-body">
+			{{ review.review|linebreaks }}
+		</div>
+		<div class="panel-footer">
+			<div class="row">
+				<div class="col-sm-4">
+					Posted by {{review.user.username}} on {{review.date|date:"F jS, Y"}}
+				</div>
+				<div class="col-sm-4">
+					<em>
+						{% if review.reviewvote_set.count == 0 %}
+							Nobody voted on this review
+						{% else %}
+							{{ review.get_percentage_100|floatformat }}% of people found this helpful (UP: {{ review.get_upvotes }} DOWN: {{ review.get_downvotes }})
+						{% endif %}
+					</em>
+				</div>
+				<div class="col-sm-4 text-right">
+                    {% if review.can_delete %}
+                    <a href="{% url 'shop:deletereview' product.id review.id %}" class="btn btn-default"><i class="fa fa-trash"></i></a>
+                    {% endif %}
+					{% if user.is_authenticated %}
+						<a href="{% url 'shop:togglevote' review.id 'up' %}" class="btn {% if review.upvoted%}btn-success{%else%}btn-default{%endif%}"><i class="fa fa-thumbs-up"></i></a>
+						<a href="{% url 'shop:togglevote' review.id 'down' %}" class="btn {%if review.downvoted%}btn-danger{%else%}btn-default{%endif%}"><i class="fa fa-thumbs-down"></i></a>
+					{% endif %}
+				</div>
+			</div>
+		</div>
+	</div>
+	{% endfor %}
+	{% else %}
+	This product has no reviews
+	{% endif %}
+</div>
+{% endblock %}
+{% block modals %}
+{% if can_review %}
+<div class="modal fade" id="review-modal" tabindex="-1" role="dialog" aria-labelledby="review-label">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="review-label">{% if reviewed %}Edit your{% else %}Write a{% endif %} review</h4>
+            </div>
+            <form class="" action="{% url 'shop:viewproduct' product.id %}" method="post">
+                <div class="modal-body">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label class="control-label" for="review-title">Review title (optional)</label>
+                        <input type="text" class="form-control" id="review-title" name="title" value="{% if reviewed %}{{ reviewed.title }}{% endif %}">
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label" for="review-rating">Rating (1 to 5)</label>
+                        <input type="number" min="1" max="5" step="1" class="form-control" id="review-rating" name="rating" value="{% if reviewed %}{{ reviewed.rating }}{% endif %}">
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label" for="review-itself">Review</label>
+                        <textarea type="text" class="form-control vresize" id="review-itself" name="review">{% if reviewed %}{{ reviewed.review }}{% endif %}</textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">{% if reviewed %}Update{% else %}Post{% endif %} review</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+{% block extrascripts %}
+{% load static %}
+<script src="{% static 'shop/vue.js' %}"></script>
+<script>
+	var app = new Vue({
+		el: '.pic-app',
+		data: {
+			pics: [
+			{% for image in product.productimage_set.all %}
+			"{{image.image.url}}",
+			{% endfor %}
+			],
+			selected: 0
+		}
+	});
+</script>
+{% endblock %}

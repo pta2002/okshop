@@ -1,0 +1,4 @@
+exclude_paths:
+- "shop/migrations"
+- "shop/static/shop/vue.js"
+- "shop/static/selecttoautocomplete.js"

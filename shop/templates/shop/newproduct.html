@@ -1,0 +1,130 @@
+{% extends "shop/base.html" %}
+{% block title %}Sell new item{% endblock %}
+{% block body %}
+<h1>Create new listing</h1>
+<form action="{% url 'shop:sellproduct' %}" method="POST">
+	{% csrf_token %}
+	<div class="panel panel-default">
+		<div class="panel-heading">
+			<h4>General info</h4>
+		</div>
+		<div class="panel-body">
+			<div class="form-group">
+				<label class="control-label" for="product_name">Product name (140 chars max)</label>
+				<input type="text" id="product-name" name="product-name" class="form-control" v-model="product_name" placeholder="Product name">
+			</div>
+			<div class="form-group">
+				<label for="description" class="control-label">Description</label>
+				<textarea name="description" id="description" class="form-control vresize" placeholder="Description"></textarea>
+			</div>
+			<div class="checkbox">
+		    	<label>
+		     		<input type="checkbox" name="is-physical" v-model="physical"> Is this product physical?
+		    	</label>
+		 	</div>
+		 	<div class="help-block" v-if="!physical">
+		 		You can't change this later.
+		 	</div>
+		 	<div class="help-block" v-if="!physical">
+		 		You'll be able to upload files/keys later.
+		 	</div>
+		 	<div class="checkbox">
+		    	<label>
+		     		<input type="checkbox" name="unlimited" v-model="unlimited"> Unlimited stock
+		    	</label>
+		 	</div>
+		 	<div v-if="!unlimited">
+		 		<div class="form-group">
+		 			<label for="stock" class="control-label">Stock</label>
+		 			<input type="number" placeholder="Stock" name="stock" id="stock" v-model="stock" class="form-control">
+		 		</div>
+		 	</div>
+		</div>
+	</div>
+	<div class="panel panel-default">
+		<div class="panel-heading">
+			<h4>Pricing</h4>
+		</div>
+		<div class="panel-body">
+			<div class="form-group">
+				<label for="price" class="control-label">Price</label>
+				<input type="number" name="price" placeholder="Price" id="price" v-model="price" step="0.00000001" min=0 class="form-control">
+			</div>
+			<div class="form-group">
+				<label for="price" class="control-label">Currency (use currency ticker)</label>
+				<input type="text" name="currency" placeholder="Currency" id="currency" class="form-control" v-model="currency">
+				<div class="help-block" v-if="currency != 'OK'">
+					The price will be estimated from the cryptonator API.
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="panel panel-default" v-if="physical">
+		<div class="panel-heading">
+			<h4>Shipping</h4>
+		</div>
+		<div class="panel-body">
+			<div class="form-group">
+				<label for="ships-from" class="control-label">Ships from</label>
+				{% include "countries.html" with name='ships-from' %}
+			</div>
+			<div class="checkbox">
+				<label><input type="checkbox" name="free-shipping" v-model="free_shipping"> Free shipping</label>
+			</div>
+			<div v-if="!free_shipping">
+				<div class="form-group">
+					<label for="local-price" class="control-label">Local shipping price</label>
+					<div class="input-group">
+						<input type="number" name="local-price" v-model="localprice" placeholder="Local price" step="0.00000001" min=0 class="form-control" id="local-price">
+						<div class="input-group-addon">{%verbatim%}{{ currency }}{% endverbatim %}</div>
+					</div>
+				</div>
+				<div class="form-group">
+					<label for="global-price" class="control-label">Global shipping price</label>
+					<div class="input-group">
+						<input type="number" name="global-price" v-model="globalprice" placeholder="Global price" step="0.00000001" min=0 class="form-control" id="global-price">
+						<div class="input-group-addon">{%verbatim%}{{ currency }}{% endverbatim %}</div>
+					</div>
+				</div>
+			</div>
+			<div class="checkbox">
+				<label><input type="checkbox" name="worldwideshipping" v-model="worldwide"> Worldwide shipping</label>
+			</div>
+			<div v-if="!worldwide">
+				<div class="form-group">
+					<label for="countries">Where does it ship to? (Ctrl-Click to select multiple)</label>
+					{% include "countries.html" with name="countries" multiple=True %}
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="panel panel-default">
+		<div class="panel-heading">
+			<h4>Images</h4>
+		</div>
+		<div class="panel-body">
+			<div class="form-group">
+				<label for="upload-pic" class="control-label">Upload images</label>
+				<input type="file" id="upload-pic" accept="image/*" multiple v-on:change="uploadfiles">
+				<div v-for="(image, index) in images">
+					<div class="col-sm-2">
+						{% verbatim %}
+						<img :src="image.url" alt="Uploaded image" class="img-responsive" style="margin: 1em 0">
+						{% endverbatim %}
+						<a v-on:click="delpic(index)" class="text-center btn btn-default btn-block"><i class="fa fa-trash" aria-hidden="true"></i></a>
+					</div>
+				</div>
+				<select name="images" multiple class="hidden">
+					<option :value="image.delete" v-for="image in images" selected="selected"></option>
+				</select>
+			</div>
+		</div>
+	</div>
+	<input type="submit" class="btn-primary btn btn-block" value="Create listing!" :disabled="!(product_name.trim() != '' && (unlimited || (stock >= 0 && stock !== '')) && (price >= 0 && price !== '') && currency != '' && localprice >= 0 && localprice !== '' && globalprice >= 0 && globalprice !== '' && images.length > 0)">
+</form>
+{% endblock %}
+{% block extrascripts %}
+{% load static %}
+<script src="{% static 'shop/vue.js' %}"></script>
+<script src="{% static 'shop/newproduct.js' %}"></script>
+{% endblock %}

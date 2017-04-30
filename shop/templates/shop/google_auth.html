@@ -1,0 +1,32 @@
+{% extends "shop/base.html" %}
+{% block title %}Authenticator settings{% endblock %}
+{% block body %}
+<h1>Authenticator settings</h1>
+<div class="panel panel-default">
+	<div class="panel-body">
+		<div>
+			<h4>To add google authenticator to your account, scan this QR code:</h4>
+			<div class="row">
+				<div class="col-sm-3">
+					<img src="{% url 'shop:qrcode' %}?text={{ code }}" alt="{{ user.userextra.authenticator_id }}" class="img-responsive">
+					<div class="text-muted">Alternativelly, enter this code: {{ user.userextra.authenticator_id }}</div>
+				</div>
+				<div class="col-sm-9">
+					<p>
+						To confirm it's you, what code do you see right now?
+						<form action="{% url 'shop:googlesettings' %}" method="POST">
+							{% csrf_token %}
+							<div class="col-sm-9">
+								<input type="number" placeholder="Google authenticator code" name="authcode" class="form-control">
+							</div>
+							<div class="col-sm-3">
+								<input type="submit" value="Submit" class="btn btn-primary btn-block">
+							</div>
+						</form>
+					</p>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+{% endblock %}

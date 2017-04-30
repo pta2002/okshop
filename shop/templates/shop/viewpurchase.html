@@ -1,0 +1,79 @@
+{% extends "shop/base.html" %}
+{% block title %}Purchase details{% endblock %}
+{% block body %}
+<h1>Purchase details</h1>
+<div class="panel panel-default">
+	<div class="panel-body">
+		<div class="col-md-6">
+			{% if purchase.shipped_to %}
+			<h3>Shipped to</h3>
+			<div class="address">
+				{{ purchase.shipped_to.name }},<br>
+				{{ purchase.shipped_to.address1 }},<br>
+				{% if purchase.shipped_to.address2 %}
+				{{ purchase.shipped_to.address2 }},<br>
+				{% endif %}
+				{{ purchase.shipped_to.state }} {{ purchase.shipped_to.zipcode }},<br>
+				{{ purchase.shipped_to.country }}<br>
+			</div>
+			{% endif %}
+		</div>
+		<div class="col-md-6 text-right">
+			<h3>Price breakdown</h3>
+			Item price: {{ purchase.get_item_price|floatformat }} OK<br>
+			{% if purchase.shipped_to %}
+			Shipping price: {{ purchase.get_shipping_price|floatformat }} OK<br>
+			{% endif %}
+			Total price: {{ purchase.get_price|floatformat }} OK<br>
+		</div>
+	</div>
+</div>
+<div class="panel panel-default">
+	<div class="panel-heading">
+		<div class="row">
+			<div class="col-sm-2">
+				DATE PURCHASED:<br>
+				{{ purchase.date|date:"F jS, Y"}}
+			</div>
+			<div class="col-sm-5">
+				PURCHASE ID:<br>
+				<a href="{% url 'shop:purchase' purchase.uuid %}">{{ purchase.uuid }}</a>
+			</div>
+		</div>
+	</div>
+	<div class="panel-body">
+		{% for item in purchase.purchaseitem_set.all %}
+		<div class="row">
+			<div class="col-md-2">
+				<img src="{{ item.product.productimage_set.first.image.url }}" alt="" class="img-responsive">
+			</div>
+			<div class="col-md-5">
+				<div class="product-name">
+					<a class="cart-product-name" href="{% url 'shop:viewproduct' item.product.id %}">{{ item.product }}</a> sold by {{item.product.seller}}
+				</div>
+			</div>
+			<div class="col-md-5">
+				<div class="row">
+					<div class="col-md-6">
+						Price: <span class="price">{{ item.product.price|floatformat }} OK</span>
+					</div>
+					<div class="col-md-6">
+						Quant.: <span class="quantity">{{ item.quantity }}</span>
+					</div>
+				</div>
+				{% if item.shipping_price %}
+				<div class="row">
+					<div class="col-md-12">
+						Shipping price: {{ item.shipping_price|floatformat }} OK
+					</div>
+				</div>
+				{% endif %}
+				<div class="row">
+					<div class="subtotal col-sm-12">Subtotal: <span class="price">{{ item.gettotal|floatformat }} OK</span></div>
+				</div>
+			</div>
+		</div>
+		{% endfor %}
+	</div>
+</div>
+{% endblock %}

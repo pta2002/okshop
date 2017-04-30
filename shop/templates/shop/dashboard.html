@@ -1,0 +1,42 @@
+{% extends "shop/base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block body %}
+<h1>Seller dashboard</h1>
+<div class="panel panel-default">
+	<div class="panel-heading">
+		<div class="row">
+			<div class="col-sm-2">
+				EARNINGS: {% if user.usershop.get_earnings|floatformat %}{{ user.usershop.get_earnings|floatformat }}{%else%}0{% endif %} OK
+			</div>
+			<div class="col-sm-2">
+				<a href="{% url 'shop:sales' %}">SALES: {% if user.usershop.get_purchases.count %}{{ user.usershop.get_purchases.count }}{% else %}0{% endif %}</a>
+			</div>
+		</div>
+	</div>
+	<div class="panel-body">
+		<h2>My products</h2>
+		<a href="{% url 'shop:sellproduct' %}" class="btn btn-block btn-primary product">Sell new item</a>
+		{% for product in user.product_set.all %}
+		<div class="panel panel-default">
+			<div class="panel-body">
+				<div class="col-sm-2">
+					<img src="{{ product.productimage_set.first.image.url }}" alt="" class="img-responsive">
+				</div>
+				<div class="col-sm-10">
+					<a href="{% url 'shop:viewproduct' product.id %}" class="cart-product-name">{{ product.product_name }}</a><br>
+					PRICE: {{ product.price|floatformat }} OK <br>
+					EARNINGS: {{ product.get_earnings|floatformat }} OK<br>
+					SALES: {{ product.get_purchases.count }}
+				</div>
+			</div>
+			<div class="panel-footer">
+				<a href="{% url 'shop:editproduct' product.id %}" class="btn btn-default">Edit</a>
+				{% if not product.physical %}
+				<a href="{% url 'shop:editkeys' product.id %}" class="btn btn-default">Manage keys and files</a>
+				{% endif %}
+			</div>
+		</div>
+		{% endfor %}
+	</div>
+</div>
+{% endblock %}

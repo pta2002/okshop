@@ -1,11 +1,19 @@
+[![Build Status](https://travis-ci.org/okcashpro/okshop.svg?branch=master)](https://travis-ci.org/okcashpro/okshop)
+[![Coverage Status](https://coveralls.io/repos/github/okcashpro/okshop/badge.svg?branch=master)](https://coveralls.io/github/okcashpro/okshop?branch=master)
+[![Code Climate](https://codeclimate.com/github/okcashpro/okshop/badges/gpa.svg)](https://codeclimate.com/github/okcashpro/okshop)
+
 # OKShop
-This is a cryptocurrency shop originally made for the [OKCash](https://okcash.co) cryptocurrency. The store is estimated to launch on [okcart.net](https://okcart.net) on February 1, 2017.
+This is a cryptocurrency shop originally made for the [OKCash](https://okcash.co) cryptocurrency. The store is currently running on [okcart.net](https://okcart.net).
 
 ## Dependencies
  - Django
  - django-countries
  - django-sendfile
- 
+ - pyotp
+ - qrcode
+ - cryptonator
+ - python-bitcoinrpc
+
 This app also requires a running OKCash daemon.
 
 # LICENSE
@@ -31,4 +39,5 @@ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
 AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.```
+SOFTWARE.
+```

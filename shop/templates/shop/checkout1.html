@@ -1,0 +1,74 @@
+{% extends "shop/checkoutbase.html" %}
+{% block title %}Checkout Step 1{% endblock %}
+{% block body %}
+<div class="panel panel-default">
+	<div class="panel-body">
+	{% if addresses %}
+		Please pick a shipping address for your order:
+		{% for address in addresses %}
+		<form action="{% url 'shop:checkout' %}" method="POST">
+			<div class="row wallet">
+				<div class="col-sm-2">{{ address.name }}</div>
+				<div class="col-sm-8">{{ address.address1 }}, {{ address.state }}, {{ address.country }}</div>
+				{% csrf_token %}
+				<input type="hidden" value="{{checkout.uuid}}" name="checkout">
+				<input type="hidden" value="{{address.id}}" name="shipping">
+				<div class="col-sm-2"><input type="submit" class="btn btn-primary btn-block" value="Use this"></div>
+			</div>
+		</form>
+		{% endfor %}
+		Alternativelly, create a new address:
+	{% else %}
+	Where would you like to ship this order to?
+	{% endif %}
+	<form action="{% url 'shop:checkout' %}" class="form-horizontal" method="POST">
+		<div class="form-group">
+			<label class="col-sm-2 control-label" for="name">Name</label>
+			<div class="col-sm-10">
+				<input type="text" name="name" id="name" class="form-control" placeholder="Name">
+			</div>
+		</div>
+		<div class="form-group">
+			<label class="col-sm-2 control-label" for="address1">Address line 1</label>
+			<div class="col-sm-10">
+				<input type="text" name="address1" id="address1" class="form-control" placeholder="Address line 1">
+			</div>
+		</div>
+		<div class="form-group">
+			<label class="col-sm-2 control-label" for="address2">Address line 2 (optional)</label>
+			<div class="col-sm-10">
+				<input type="text" name="address2" id="address2" class="form-control" placeholder="Address line 2 (optional)">
+			</div>
+		</div>
+		<div class="form-group">
+			<label class="col-sm-2 control-label" for="address2">State/province</label>
+			<div class="col-sm-10">
+				<input type="text" name="state" id="state" class="form-control" placeholder="State/province">
+			</div>
+		</div>
+		<div class="form-group">
+			<label class="col-sm-2 control-label" for="zip">ZIP code</label>
+			<div class="col-sm-10">
+				<input type="text" name="zip" id="zip" class="form-control" placeholder="ZIP code">
+			</div>
+		</div>
+		<div class="form-group">
+			<label class="col-sm-2 control-label" for="address2">Country</label>
+			<div class="col-sm-10">
+				{% include "countries.html" with name='country' %}
+			</div>
+		</div>
+		{% csrf_token %}
+		<input type="hidden" value="{{checkout.uuid}}" name="checkout">
+		<input type="hidden" value="this doesn't really matter, hi person checking the source" name="use_custom_address">
+		<div class="col-sm-offset-2 col-sm-10"><input type="submit" class="btn btn-primary" value="Use this"></div>
+	</form>
+	</div>
+	<div class="panel-footer">
+		<a href="{% url 'shop:cart' %}" class="btn btn-default">Cancel</a>
+	</div>
+</div>
+{% endblock %}
+{% block extrascripts %}
+{% load static %}
+{% endblock %}
