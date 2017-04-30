@@ -18,8 +18,8 @@ A user could 'subscribe' to a tag, making it appear on their homepage.
 *** TODO Browse tags
 Allow tag browsing. Allow for multiple tags at the same time, using +.
 Example: /tags/foo would show products tagged as 'foo'.
-/tags/foo-bar would show products tagged as foo or bar
-/tags/foo+bar would show products tagged as foo and bar
+/tags/foo+bar would show products tagged as foo or bar
+/tags/foo-bar would show products tagged as foo and bar
 
 ** TODO Analytics
 Using this, users can see how their product is doing.
