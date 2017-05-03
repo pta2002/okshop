@@ -45,6 +45,21 @@
     margin-bottom: 0.5em;
 }
 
+.search-bar input,
+.search-bar .btn {
+    background: #222;
+    border-color: #444;
+}
+
+.search-bar .btn {
+    background: #333;
+    color: white;
+}
+
+.search-bar .btn:hover {
+    background: #444;
+}
+
 /* -----------------------------------------------
  * Timeline
  * --------------------------------------------- */
