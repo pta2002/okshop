@@ -31,9 +31,6 @@ def view_product(request, id):
 
     if request.method == 'POST':
         errors = []
-
-        print(":D")
-
         if not request.user.is_authenticated():
             return redirect(reverse('shop:login') + '?next=%s' % request.path)
 
@@ -1196,3 +1193,6 @@ def toggle_vote(request, id, vote):
         return redirect(request.GET['next'])
     else:
         return redirect(review.product)
+
+def search(request):
+    pass
