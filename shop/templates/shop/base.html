@@ -1,5 +1,5 @@
 <!--
-	##########
+    ##########
    #          #
    #    OK    #
    #          #
@@ -38,7 +38,7 @@ Yes, that's the best I can do, sorry ¯\_(ツ)_/¯
                 <form action="{% url 'shop:search' %}" method="get" class="navbar-form navbar-left search-bar">
                     <div class="form-group">
                         <div class="input-group">
-                            <input type="text" class="form-control" placeholder="Search" name="query">
+                            <input type="text" value="{{query}}" class="form-control" placeholder="Search" name="query">
                             <a class="input-group-addon btn btn-default">Search</a>
                         </div>
                     </div>

@@ -5,7 +5,7 @@ from . import views
 app_name = 'shop'
 urlpatterns = [
     url(r'^$', views.homepage, name='homepage'),
-    url(r'^search/', views.search, name='search'),
+    url(r'^search/(?P<page>\d*[1-9]\d*/)?$', views.search, name='search'),
     url(r'^product/(?P<id>\d*[1-9]\d*)/$', views.view_product,
         name='viewproduct'),
     url(
