@@ -285,7 +285,7 @@ class CartEntry(models.Model):
 
 class VerifyEmail(models.Model):
     user = models.ForeignKey(User)
-    verify_url = models.CharField(max_length=32, default=uuid.uuid4,
+    verify_url = models.CharField(max_length=36, default=uuid.uuid4,
                                   unique=True)
     sent = models.DateTimeField(default=timezone.now)
     valid = models.BooleanField(default=True)
@@ -449,7 +449,7 @@ class PhysicalAddress(models.Model):
 class Purchase(models.Model):
     by = models.ForeignKey(User)
     date = models.DateTimeField(default=timezone.now)
-    uuid = models.CharField(max_length=32, default=uuid.uuid4, unique=True)
+    uuid = models.CharField(max_length=36, default=uuid.uuid4, unique=True)
     notes = models.TextField(blank=True, null=True)
     shipped_to = models.ForeignKey(PhysicalAddress, blank=True, null=True)
 
@@ -514,10 +514,10 @@ def in_ten_mins():
 
 class Authorization(models.Model):
     expires = models.DateTimeField(default=in_ten_mins)
-    code = models.CharField(max_length=32, default=uuid.uuid4)
+    code = models.CharField(max_length=36, default=uuid.uuid4)
     user = models.ForeignKey(User)
     valid = models.BooleanField(default=True)
-    allowto = models.CharField(max_length=32)
+    allowto = models.CharField(max_length=36)
 
     def __str__(self):
         return '%s for %s' % (self.allowto, self.user.username)
@@ -530,7 +530,7 @@ class Authorization(models.Model):
 
 
 class Checkout(models.Model):
-    uuid = models.CharField(default=uuid.uuid4, max_length=32)
+    uuid = models.CharField(default=uuid.uuid4, max_length=36)
     step = models.IntegerField(default=0)
     cart = models.ForeignKey(Cart)
     user = models.ForeignKey(User)
