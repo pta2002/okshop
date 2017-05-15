@@ -47,9 +47,9 @@ class Product(models.Model):
     product_description = models.TextField()
     approved = models.BooleanField(default=True)
 
-    price = models.DecimalField(max_digits=2**16, decimal_places=8)
+    price = models.DecimalField(max_digits=1000, decimal_places=8)
     price_currency = models.CharField(max_length=16, default='OK')
-    cached_rate = models.DecimalField(blank=True, null=True, max_digits=2**16,
+    cached_rate = models.DecimalField(blank=True, null=True, max_digits=1000,
                                       decimal_places=8)
     rate_lastupdated = models.DateTimeField(default=timezone.now)
 
@@ -63,9 +63,9 @@ class Product(models.Model):
     free_shipping = models.BooleanField(default=False)
     worldwide_shipping = models.BooleanField(default=False)
     ships_from = CountryField(null=True, blank=True)
-    local_price = models.DecimalField(max_digits=2**16, decimal_places=8,
+    local_price = models.DecimalField(max_digits=1000, decimal_places=8,
                                       default=0)
-    outside_price = models.DecimalField(max_digits=2**16, decimal_places=8,
+    outside_price = models.DecimalField(max_digits=1000, decimal_places=8,
                                         default=0)
 
     redeeming_instructions = models.TextField(default='', blank=True,
@@ -377,7 +377,7 @@ class UserExtra(models.Model):
 
 
 class Wallet(models.Model):
-    redeemed = models.DecimalField(max_digits=2**16, decimal_places=8,
+    redeemed = models.DecimalField(max_digits=1000, decimal_places=8,
                                    default=0)
     user = models.ForeignKey(User)
     label = models.CharField(max_length=30)
@@ -485,14 +485,14 @@ class Purchase(models.Model):
 
 class PurchaseItem(models.Model):
     product = models.ForeignKey(Product)
-    price = models.DecimalField(max_digits=2**16, decimal_places=8)
+    price = models.DecimalField(max_digits=1000, decimal_places=8)
     quantity = models.IntegerField(default=1)
     gift = models.BooleanField(default=False)
     purchase = models.ForeignKey(Purchase)
     address = models.ForeignKey(PhysicalAddress, blank=True, null=True)
-    shipping_price = models.DecimalField(max_digits=2**16, decimal_places=8,
+    shipping_price = models.DecimalField(max_digits=1000, decimal_places=8,
                                          default=0)
-    fee = models.DecimalField(max_digits=2**16, decimal_places=8,
+    fee = models.DecimalField(max_digits=1000, decimal_places=8,
                               default=0.995)
 
     def done(self):
@@ -536,9 +536,9 @@ class Checkout(models.Model):
     user = models.ForeignKey(User)
     wallet = models.ForeignKey(Wallet, blank=True, null=True)
     shipping = models.ForeignKey(PhysicalAddress, blank=True, null=True)
-    cached_price = models.DecimalField(max_digits=2**16, decimal_places=8,
+    cached_price = models.DecimalField(max_digits=1000, decimal_places=8,
                                        blank=True, null=True)
-    cached_shipping = models.DecimalField(max_digits=2**16, decimal_places=8,
+    cached_shipping = models.DecimalField(max_digits=1000, decimal_places=8,
                                           blank=True, null=True)
 
     def buy(self):
