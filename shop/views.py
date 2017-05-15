@@ -22,6 +22,7 @@ import json
 import qrcode
 import pyotp
 from PIL import Image
+from haystack.query import SearchQuerySet
 
 
 # Create your views here.
@@ -1194,3 +1195,11 @@ def toggle_vote(request, id, vote):
         return redirect(request.GET['next'])
     else:
         return redirect(review.product)
+
+def search(request, page=0):
+    query = request.GET.get('query', '')
+
+    search_set = SearchQuerySet().filter(content=query)
+
+    return render(request, 'shop/search_results.html', {'results': search_set, 'query': query})
+

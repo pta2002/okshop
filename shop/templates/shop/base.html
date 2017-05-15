@@ -1,5 +1,5 @@
 <!--
-		##########
+    ##########
    #          #
    #    OK    #
    #          #
@@ -35,6 +35,14 @@ Yes, that's the best I can do, sorry ¯\_(ツ)_/¯
 				<a href="{% url 'shop:homepage' %}" class="navbar-brand">OKCart</a>
 			</div>
 			<div class="collapse navbar-collapse" id="navbar-collapse-1">
+                <form action="{% url 'shop:search' %}" method="get" class="navbar-form navbar-left search-bar">
+                    <div class="form-group">
+                        <div class="input-group">
+                            <input type="text" value="{{query}}" class="form-control" placeholder="Search" name="query">
+                            <a class="input-group-addon btn btn-default">Search</a>
+                        </div>
+                    </div>
+                </form>
 				<ul class="nav navbar-nav navbar-right">
 					{% if user.is_authenticated %}
 					<li class="dropdown">
