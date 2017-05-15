@@ -1,11 +1,11 @@
 # pylint: disable=C0321
-from django.conf.urls import url
+from django.conf.urls import url, include
 from . import views
 
 app_name = 'shop'
 urlpatterns = [
     url(r'^$', views.homepage, name='homepage'),
-    url(r'^search/$', views.search, name='search'),
+    url(r'^search/', views.search, name='search'),
     url(r'^product/(?P<id>\d*[1-9]\d*)/$', views.view_product,
         name='viewproduct'),
     url(
