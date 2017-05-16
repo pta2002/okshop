@@ -246,3 +246,21 @@
         left: 28px;
     }
 }
+
+.footer {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    min-height: 60px;
+    background-color: #222;
+    padding: 10px;
+}
+
+html {
+    position: relative;
+    min-height: 100%;
+}
+
+body {
+    margin-bottom: 60px;
+}
