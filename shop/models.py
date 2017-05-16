@@ -363,15 +363,15 @@ class UserExtra(models.Model):
 
     def clear_cart(self):
         if hasattr(self, 'cart'):
-            self.cart.clear()
+            self.user.cart.clear()
 
     def add_to_cart(self, product, quantity=1, gift=False):
-        if not hasattr(self, 'cart'):
-            self.cart = Cart(user=self.user)
-            self.cart.save()
-        if self.cart.in_cart(product):
-            self.cart.cartentry_set.get(product=product).delete()
-        ce = CartEntry(cart=self.cart, product=product, quantity=quantity,
+        if not hasattr(self.user, 'cart'):
+            self.user.cart = Cart(user=self.user)
+            self.user.cart.save()
+        if self.user.cart.in_cart(product):
+            self.user.cart.cartentry_set.get(product=product).delete()
+        ce = CartEntry(cart=self.user.cart, product=product, quantity=quantity,
                        gift=gift)
         ce.save()
 
