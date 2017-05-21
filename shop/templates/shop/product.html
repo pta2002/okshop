@@ -60,24 +60,28 @@
 				<td><a href="{% url 'shop:shop' product.seller.username %}">{{product.seller}}</a></td>
 			</tr>
 		</table>
-		{% if can_buy %}
-		{% if not product.in_stock %}
-			<a href="#" disabled class="btn btn-primary btn-disabled btn-block">OUT OF STOCK</a>
-		{% else %}
-			{% if not incart %}
-			<a href="{% url 'shop:addtocart' product.id %}" class="btn {% if not user.is_authenticated %}btn-default{% else %}btn-primary{% endif %} btn-block">
-				{% if not user.is_authenticated %}LOGIN TO {% endif %}ADD TO CART</a>
-			{% else %}
-			<a href="#" disabled class="btn btn-primary btn-disabled btn-block">ALREADY IN CART</a>
-			{% endif %}
-		{% endif %}
-		{% else %}
-		{% if user.is_authenticated %}
-		<a href="#" disabled class="btn btn-primary btn-disabled btn-block">ALREADY OWNED</a>
-		{% else %}
-		<a href="{% url 'shop:login' %}?next={{ request.path }}" class="btn btn-default btn-block">LOG IN TO BUY</a>
-		{% endif %}
-		{% endif %}
+        {% if product.removed %}
+        <a href="#" disabled class="btn btn-danger btn-disabled btn-block">PRODUCT REMOVED</a>
+        {% else %}
+            {% if can_buy %}
+                {% if not product.in_stock %}
+                    <a href="#" disabled class="btn btn-primary btn-disabled btn-block">OUT OF STOCK</a>
+                {% else %}
+                    {% if not incart %}
+                    <a href="{% url 'shop:addtocart' product.id %}" class="btn {% if not user.is_authenticated %}btn-default{% else %}btn-primary{% endif %} btn-block">
+                        {% if not user.is_authenticated %}LOGIN TO {% endif %}ADD TO CART</a>
+                    {% else %}
+                    <a href="#" disabled class="btn btn-primary btn-disabled btn-block">ALREADY IN CART</a>
+                    {% endif %}
+                {% endif %}
+            {% else %}
+                {% if user.is_authenticated %}
+                <a href="#" disabled class="btn btn-primary btn-disabled btn-block">ALREADY OWNED</a>
+                {% else %}
+                <a href="{% url 'shop:login' %}?next={{ request.path }}" class="btn btn-default btn-block">LOG IN TO BUY</a>
+                {% endif %}
+            {% endif %}
+        {% endif %}
 		{% if product.seller == user %}
 		<a href="{% url 'shop:editproduct' product.id %}" class="btn btn-default btn-block">Edit product</a>
 		{% endif %}

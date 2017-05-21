@@ -27,7 +27,7 @@ from haystack.query import SearchQuerySet
 
 # Create your views here.
 def view_product(request, id):
-    product = get_object_or_404(Product, id=id)
+    product = get_object_or_404(Product, id=id, approved=True)
 
 
     if request.method == 'POST':
@@ -124,7 +124,7 @@ def view_cart(request):
 @login_required
 def add_to_cart(request, id):
     cart = request.user.cart
-    product = get_object_or_404(Product, id=id)
+    product = get_object_or_404(Product, id=id, approved=True, removed=False)
     if request.user.userextra.can_purchase_item(product):
         if product.in_stock():
             if cart.in_cart(product):
@@ -610,7 +610,7 @@ class HomeSection():
 def homepage(request):
     sections = []
 
-    new_section = HomeSection(lambda: Product.objects.all().order_by('-date'),
+    new_section = HomeSection(lambda: Product.objects.filter(removed=False, approved=True).order_by('-date'),
                               'Recently added')
     sections.append(new_section)
     
@@ -814,7 +814,7 @@ def sell_new_product(request):
 
         if request.POST.get('product-name', '').strip() == '':
             errors.append("Product name can't be empty!")
-        if 'unlimited' in request.POST:
+        if 'unlimited' not in request.POST:
             try:
                 stock = int(request.POST.get('stock', 0))
                 if stock < 0:
@@ -879,7 +879,8 @@ def sell_new_product(request):
                 stock=int(request.POST.get('stock', 0)),
                 seller=request.user,
                 free_shipping='free-shipping' in request.POST,
-                unlimited_stock='unlimited' in request.POST
+                unlimited_stock='unlimited' in request.POST,
+                delete_on_over = 'delete-on-over' in request.POST
                 )
             p.save()
             for i in imgs:

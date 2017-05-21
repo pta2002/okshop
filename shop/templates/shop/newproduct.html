@@ -38,6 +38,11 @@
 		 			<label for="stock" class="control-label">Stock</label>
 		 			<input type="number" placeholder="Stock" name="stock" id="stock" v-model="stock" class="form-control">
 		 		</div>
+                <div class="checkbox">
+                    <label>
+                        <input type="checkbox" name="delete-on-over" v-model="deleteover"> Delete when stock is over
+                    </label>
+                </div>
 		 	</div>
 		</div>
 	</div>

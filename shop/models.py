@@ -73,6 +73,8 @@ class Product(models.Model):
     unlimited_stock = models.BooleanField(default=False)
 
     can_purchase_multiple = models.BooleanField(default=True)
+    delete_on_over = models.BooleanField(default=False)
+    removed = models.BooleanField(default=False)
 
     def __str__(self):
         return self.product_name
@@ -128,7 +130,7 @@ class Product(models.Model):
             us = UserShop(user=self.seller, pay_to_address=a)
             us.save()
         if (self.stock >= ammount or self.unlimited_stock) and \
-                self.ships_to(address):
+                self.ships_to(address) and not self.removed:
             if getattr(settings, 'FEE_ADDRESS', '') != '':
                 wallet.send_to(
                     getattr(settings, 'FEE_ADDRESS', ''),
@@ -147,6 +149,8 @@ class Product(models.Model):
                 fee = 1
             if not self.unlimited_stock:
                 self.stock -= ammount
+                if self.delete_on_over and self.stock == 0:
+                    self.removed = True
             self.save()
             send_mail("Someone bought one of your items!", """Hello %s,
 
