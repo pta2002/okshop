@@ -1,4 +1,4 @@
-from bitcoinrpc.authproxy import AuthServiceProxy, JSONRPCException
+from bitcoinrpc.authproxy import AuthServiceProxy
 from django.conf import settings
 import bitaddress
 
@@ -6,26 +6,24 @@ import bitaddress
 def get_rpc():
     if not getattr(settings, 'TESTING', False):
         return AuthServiceProxy("http://%s:%s@%s:%s" % (getattr(settings,
-                                                        'RPC_USERNAME'),
-                                getattr(settings, 'RPC_PASSWORD'),
-                                getattr(settings, 'RPC_IP'),
-                                getattr(settings, 'RPC_PORT')))
+                                                                'RPC_USERNAME'),
+                                                        getattr(settings, 'RPC_PASSWORD'),
+                                                        getattr(settings, 'RPC_IP'),
+                                                        getattr(settings, 'RPC_PORT')))
 
 
 def new_address():
     if not getattr(settings, 'TESTING', False):
         rpc = get_rpc()
         return rpc.getnewaddress()
-    else:
-        return bitaddress.generate_address(version=0x37)
+    return bitaddress.generate_address(version=0x37)
 
 
 def getreceivedbyaddress(address, confirms):
     if not getattr(settings, 'TESTING', False):
         rpc = get_rpc()
         return rpc.getreceivedbyaddress(address, confirms)
-    else:
-        return 0
+    return 0
 
 
 def settxfee(fee):
@@ -37,10 +35,10 @@ def settxfee(fee):
 def sendtoaddress(addr, ammount):
     if not getattr(settings, 'TESTING', False):
         rpc = get_rpc()
-        rpc.sendtoaddress(address, ammount)
+        rpc.sendtoaddress(addr, ammount)
 
 
 def validateaddress(addr):
     if getattr(settings, 'TESTING', False):
-        return get_rpc().validateaddress(request.GET['address'])
+        return get_rpc().validateaddress(addr)
     return len(addr) == 34  # TODO: More accurate

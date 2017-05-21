@@ -105,7 +105,7 @@ class Product(models.Model):
                  >= timezone.timedelta(hours=1):
                     self.rate_lastupdated = timezone.now()
                     self.cached_rate = Decimal(cryptonator.get_exchange_rate(
-                                                self.price_currency, 'ok'))
+                        self.price_currency, 'ok'))
                     self.save()
                 return Decimal(self.cached_rate) * Decimal(self.local_price)
             return self.local_price
@@ -115,7 +115,7 @@ class Product(models.Model):
              >= timezone.timedelta(hours=1):
                 self.rate_lastupdated = timezone.now()
                 self.cached_rate = Decimal(cryptonator.get_exchange_rate(
-                                            self.price_currency, 'ok'))
+                    self.price_currency, 'ok'))
                 self.save()
             return Decimal(self.cached_rate) * Decimal(self.outside_price)
         return self.outside_price
@@ -135,17 +135,17 @@ class Product(models.Model):
                 wallet.send_to(
                     getattr(settings, 'FEE_ADDRESS', ''),
                     (self.get_shipping_price(address)
-                        + self.get_item_price()*ammount) * Decimal(0.005))
+                     + self.get_item_price()*ammount) * Decimal(0.005))
                 wallet.send_to(
                     self.seller.usershop.pay_to_address.address,
                     (self.get_shipping_price(address)
-                        + self.get_item_price()*ammount) * Decimal(0.995))
+                     + self.get_item_price()*ammount) * Decimal(0.995))
                 fee = 0.995
             else:
                 wallet.send_to(
                     self.seller.usershop.pay_to_address.address,
                     (self.get_shipping_price(address)
-                        + self.get_item_price() * Decimal(ammount)))
+                     + self.get_item_price() * Decimal(ammount)))
                 fee = 1
             if not self.unlimited_stock:
                 self.stock -= ammount
@@ -185,7 +185,7 @@ Thanks for selling with OKCart!""" % (self.seller.username,
              >= timezone.timedelta(hours=1):
                 self.rate_lastupdated = timezone.now()
                 self.cached_rate = Decimal(cryptonator.get_exchange_rate(
-                                           self.price_currency, 'ok'))
+                    self.price_currency, 'ok'))
                 self.save()
             return Decimal(self.cached_rate) * Decimal(self.price)
         return self.price
@@ -577,7 +577,7 @@ Thanks for buying with OKCart!""" % (self.user.username,
         if not self.cached_shipping:
             s = 0
             for item in self.cart.cartentry_set.filter(
-              product__stock__gte=F('quantity'), product__physical=True):
+                    product__stock__gte=F('quantity'), product__physical=True):
                 if item.product.ships_to(self.shipping) and \
                  self.user.userextra.can_purchase_item(item.product):
                     s += item.product.get_shipping_price(self.shipping)

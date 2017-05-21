@@ -113,7 +113,7 @@ def review_delete(request, id, reviewid):
     return redirect(request.GET.get('next', reverse('shop:viewproduct',
                                                     kwargs={'id':
                                                             review.product.id}
-                                                    )))
+                                                   )))
 
 
 @login_required
@@ -222,7 +222,7 @@ def register_view(request):
             email = request.POST['email'].strip()
 
             errors = []
-            if re.match('^[\w-]+$', username) is None or \
+            if re.match(r'^[\w-]+$', username) is None or \
                     len(username) > 150 or \
                     username == '':
                 errors.append('Invalid username!')
@@ -284,7 +284,7 @@ def verify_email(request, uuid):
 @auth_required(forid='wallets')
 def wallets(request):
     wallets = request.user.wallet_set.filter(active=True)
-    return render(request, 'shop/wallets.html',  {'wallets': wallets})
+    return render(request, 'shop/wallets.html', {'wallets': wallets})
 
 
 @login_required
@@ -409,8 +409,8 @@ def checkout(request):
 
             if chkout.step == 0:
                 if request.POST.get('shipping', False) and \
-                        request.user.physicaladdress_set.filter(
-                        id=request.POST.get('shipping', 0)).count() >= 1:
+                   request.user.physicaladdress_set \
+                   .filter(id=request.POST.get('shipping', 0)).count() >= 1:
                     chkout.shipping = request.user.physicaladdress_set.get(
                         id=request.POST.get('shipping', 0))
                     chkout.step = 1
@@ -454,9 +454,9 @@ def checkout(request):
                 else:
                     messages.warning(request,
                                      "Please fill out all required fields")
-            elif chkout.step == 1 and (
-             not chkout.cart.has_physical_items() or
-             hasattr(chkout, 'shipping')):
+            elif chkout.step == 1 and \
+                 (not chkout.cart.has_physical_items() or
+                  hasattr(chkout, 'shipping')):
                 if request.POST.get('address', False) and \
                  request.user.wallet_set.filter(id=request.POST.get('address',
                                                                     0)) \
@@ -464,9 +464,9 @@ def checkout(request):
                     chkout.wallet = request.user.wallet_set.get(
                         id=request.POST.get('address', 0))
                     chkout.step = 2
-            elif chkout.step == 2 and 'confirm' in request.POST and (
-              not chkout.cart.has_physical_items() or
-              hasattr(chkout, 'shipping')) and hasattr(chkout, 'wallet'):
+            elif chkout.step == 2 and 'confirm' in request.POST and \
+                 (not chkout.cart.has_physical_items() or
+                  hasattr(chkout, 'shipping')) and hasattr(chkout, 'wallet'):
                 p = chkout.buy()
                 chkout.cart.clear()
                 messages.success(request, 'Paid!')
@@ -610,10 +610,12 @@ class HomeSection():
 def homepage(request):
     sections = []
 
-    new_section = HomeSection(lambda: Product.objects.filter(removed=False, approved=True).order_by('-date'),
-                              'Recently added')
+    new_section = HomeSection(
+        lambda: Product.objects.filter(removed=False, approved=True)
+        .order_by('-date'),
+        'Recently added')
     sections.append(new_section)
-    
+
     return render(request, 'shop/frontpage.html', {'home_sections': sections})
 
 
@@ -639,8 +641,8 @@ def get_key(request):
                     })
             else:
                 return JsonResponse(
-                    {'errors': "The seller ran out of keys." +
-                     "Please try again later!"})
+                    {'errors': "The seller ran out of keys."
+                               "Please try again later!"})
         except ObjectDoesNotExist:
             return JsonResponse({'errors': "Can't find key"})
 
@@ -722,7 +724,7 @@ def manage_order(request, id):
                                    update=request.POST.get('longupdate', '')
                                    .strip(),
                                    done=request.POST.get('done', 'off') == 'on'
-                                   )
+                                  )
                 u.save()
                 messages.success(request, "Successfully updated")
                 if not u.done:
@@ -757,7 +759,7 @@ Thanks for buying with OKCart!""" % (order.purchase.by, order.quantity,
 
     updates = order.shippingupdate_set.all().order_by('-date')
     return render(request, 'shop/manageorder.html', {'order': order,
-                  'updates': updates})
+                                                     'updates': updates})
 
 
 def qr_code(request):
@@ -789,7 +791,7 @@ def google_settings(request):
                     request.user.userextra.save()
                     messages.success(request,
                                      "Successfully added google authenticator!"
-                                     )
+                                    )
                 else:
                     msg = "Your code doesn't seem right... Doule check it!"
                     messages.warning(request, msg)
@@ -872,7 +874,7 @@ def sell_new_product(request):
             p = Product(
                 product_name=request.POST.get('product-name', '').strip(),
                 product_description=request.POST.get('description', '')
-                                    .strip(),
+                .strip(),
                 price=Decimal(request.POST.get('price', 0)),
                 price_currency=request.POST.get('currency', 'OK').strip(),
                 physical='is-physical' in request.POST,
@@ -880,7 +882,7 @@ def sell_new_product(request):
                 seller=request.user,
                 free_shipping='free-shipping' in request.POST,
                 unlimited_stock='unlimited' in request.POST,
-                delete_on_over = 'delete-on-over' in request.POST
+                delete_on_over='delete-on-over' in request.POST
                 )
             p.save()
             for i in imgs:
@@ -919,7 +921,7 @@ def upload_pic(request):
                                                seller=request.user)
             p.save()
             response['images'].append({'url': p.image.url, 'id': p.id,
-                                      'delete': p.uuid})
+                                       'delete': p.uuid})
         except AttributeError:
             pass
     return JsonResponse(response)
@@ -954,8 +956,8 @@ def change_password(request):
             errors.append("Passwords don't match!")
 
         if request.user.userextra.authenticator_verified:
-            if not request.user.userextra.verify_2fa(
-               request.POST.get('2facode', '')):
+            if (not request.user.userextra.verify_2fa(
+                    request.POST.get('2facode', ''))):
                 errors.append("Google auth code is incorrect")
 
         if not errors:
@@ -1145,7 +1147,7 @@ def upload_file_noapi(request, id):
     else:
         if 'file' not in request.FILES:
             messages.warning(request, "File is required")
-        if not (0 < len(request.POST.get('name', '')) <= 200):
+        if not 0 < len(request.POST.get('name', '')) <= 200:
             messages.warning(request,
                              "Name must be between 1 and 200 characters")
     print(request.FILES)
@@ -1203,4 +1205,3 @@ def search(request, page=0):
     search_set = SearchQuerySet().filter(content=query)
 
     return render(request, 'shop/search_results.html', {'results': search_set, 'query': query})
-
