@@ -16,6 +16,7 @@ from decimal import Decimal
 from sendfile import sendfile
 from .models import *
 from .decorators import *
+from .forms import *
 from . import cryptomethods as cm
 import re
 import json
@@ -212,46 +213,23 @@ def validateEmail(email):
 
 def register_view(request):
     if request.method == 'POST':
-        if 'username' in request.POST and \
-          'password' in request.POST and \
-          'passwordconfirm' in request.POST and \
-          'email' in request.POST:
-            username = request.POST['username'].strip()
-            password = request.POST['password']
-            passwordconfirm = request.POST['passwordconfirm']
-            email = request.POST['email'].strip()
+        form = RegisterForm(request.POST)
+        if form.is_valid():
+            messages.success(request,
+                             'User registered! Please check your email ' +
+                             'to complete your verification.')
+            u = User.objects.create_user(form.cleaned_data['username'],
+                                         form.cleaned_data['email'],
+                                         form.cleaned_data['password'])
+            send_confirmation_email(u)
+            if 'next' in request.GET and request.GET['next'] != '':
+                return redirect(request.GET['next'])
+            else:
+                return redirect('shop:login')
+    else:
+        form = RegisterForm()
 
-            errors = []
-            if re.match(r'^[\w-]+$', username) is None or \
-                    len(username) > 150 or \
-                    username == '':
-                errors.append('Invalid username!')
-            if len(password) < 8:
-                errors.append("Password must be at least 8 characters long")
-            if password != passwordconfirm:
-                errors.append('Passwords don\'t match')
-            if not validateEmail(email):
-                errors.append('Invalid email!')
-            if User.objects.filter(username=username).count() > 0:
-                errors.append('Username is already in use!')
-            if User.objects.filter(email=email).count() > 0:
-                errors.append('Email is already in use!')
-
-            for e in errors:
-                messages.warning(request, e)
-
-            if len(errors) == 0:
-                messages.success(request,
-                                 'User registered! Please check your email ' +
-                                 'to complete your verification.')
-                u = User.objects.create_user(username, email, password)
-                send_confirmation_email(u)
-                if 'next' in request.GET and request.GET['next'] != '':
-                    return redirect(request.GET['next'])
-                else:
-                    return redirect('shop:login')
-
-    return render(request, 'shop/register.html')
+    return render(request, 'shop/register.html', {'form': form})
 
 
 def logoutview(request):

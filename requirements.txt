@@ -4,6 +4,7 @@ construct==2.8.12
 cryptonator==0.0.2
 Django==1.11.1
 django-countries==4.5
+django-crispy-forms==1.6.1
 django-haystack==2.6.0
 django-sendfile==0.3.11
 ecdsa==0.13
@@ -23,4 +24,5 @@ pytz==2017.2
 qrcode==5.3
 requests==2.14.2
 six==1.10.0
+Whoosh==2.7.4
 ws4py==0.4.2
