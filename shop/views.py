@@ -32,42 +32,24 @@ def view_product(request, id):
 
 
     if request.method == 'POST':
-        errors = []
-
+        form = ReviewForm(request.POST)
         if not request.user.is_authenticated():
             return redirect(reverse('shop:login') + '?next=%s' % request.path)
 
         if not product.is_owned_by(request.user):
-            errors.append("You don't own this product!")
-
-        if 'rating' not in request.POST:
-            errors.append('Rating is a required field')
-
-        if len(request.POST.get('review', '').strip()) == 0:
-            errors.append('Review is a required field')
-
-        if len(request.POST.get('title', '')) > 150:
-            errors.append('Title must be at most 150 characters')
-
-        try:
-            if not 0 < int(request.POST.get('rating')) <= 5:
-                errors.append('Rating must be between 1 and 5')
-        except ValueError:
-            errors.append('Invalid rating')
-
-        if not errors:
+            messages.warning(request, "You don't own this product.")
+        elif form.is_valid():
             try:
                 review = product.review_set.get(user=request.user)
             except ObjectDoesNotExist:
                 review = Review(product=product, user=request.user)
 
-            review.title = request.POST.get('title', '')
-            review.review = request.POST.get('review').strip()
-            review.rating = request.POST.get('rating')
+            review.title = form.cleaned_data['title']
+            review.review = form.cleaned_data['review']
+            review.rating = form.cleaned_data['rating']
             review.save()
-
-        for error in errors:
-            messages.warning(request, error)
+    else:
+        form = ReviewForm()
 
     reviews = sorted(product.review_set.all(), key=lambda t: -t.get_ordering())
     for review in reviews:
@@ -84,6 +66,7 @@ def view_product(request, id):
 
         context = {
             'reviews': reviews,
+            'form': form,
             'product': product,
             'incart': cart.in_cart(product),
             'can_buy': request.user.userextra.can_purchase_item(product),
