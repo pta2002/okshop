@@ -2,7 +2,7 @@ from django import forms
 from django.contrib.auth.models import User
 from django.core.validators import validate_email, validate_slug, MinLengthValidator
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Submit
+from crispy_forms.layout import Submit, Layout, Div
 
 class RegisterForm(forms.Form):
     username = forms.CharField(label='Username', max_length=150,
@@ -32,3 +32,34 @@ class RegisterForm(forms.Form):
         self.helper.label_class = 'col-lg-2'
         self.helper.field_class = 'col-lg-8'
 
+
+class ReviewForm(forms.Form):
+    title = forms.CharField(label='Title', max_length=150, required=False)
+    rating = forms.FloatField(label='Rating',
+                              widget=forms.NumberInput(attrs={'min': 1, 'max': 5, 'step': 1}),
+                              required=True)
+    review = forms.CharField(label='Review',
+                             widget=forms.Textarea(attrs={'class': 'vresize'}),
+                             required=True)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper()
+        self.helper.form_class = 'modal-body'
+        self.helper.layout = Layout(
+            Div(
+                'title',
+                'rating',
+                'review',
+                css_class='modal-body'
+            ),
+            Div(
+                Submit('submit', 'Post Review'),
+                css_class='modal-footer'
+            )
+        )
+
+
+    def clean_rating(self):
+        data = self.cleaned_data
+        return int(data['rating'])
