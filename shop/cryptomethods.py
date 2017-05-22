@@ -41,4 +41,4 @@ def sendtoaddress(addr, ammount):
 def validateaddress(addr):
     if getattr(settings, 'TESTING', False):
         return get_rpc().validateaddress(addr)
-    return len(addr) == 34  # TODO: More accurate
+    return {'isvalid': len(addr) == 34}  # TODO: More accurate
