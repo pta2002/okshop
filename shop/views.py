@@ -892,7 +892,7 @@ def upload_pic(request):
 @login_required
 def delete_pic(request, uuid):
     pic = get_object_or_404(ProductImage, uuid=uuid)
-    if pic.prodcut is None or pic.product.seller == request.user:
+    if pic.product is None or pic.product.seller == request.user:
         pic.delete()
         return JsonResponse({'status': 'ok'})
     else:
