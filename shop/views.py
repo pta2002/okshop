@@ -1166,3 +1166,8 @@ def search(request, page=0):
     search_set = SearchQuerySet().filter(content=query)
 
     return render(request, 'shop/search_results.html', {'results': search_set, 'query': query})
+
+def view_all(request, page=0):
+    products = Product.objects.filter(approved=True, removed=False).order_by('-date')
+
+    return render(request, 'shop/all_products.html', {'products': products})
