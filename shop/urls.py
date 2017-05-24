@@ -16,8 +16,10 @@ urlpatterns = [
         name='addtocart'),
     url(r'^product/(?P<id>\d*[1-9]\d*)/edit/$', views.edit_product,
         name='editproduct'),
-    url(r'^product/(?P<id>\d*[1-9]\d*)/edit/keys/$', views.edit_keys,
+    url(r'^product/(?P<id>\d*[1-9]\d*)/edit/files/$', views.edit_keys,
         name='editkeys'),
+    url(r'^product/(?P<id>\d*[1-9]\d*)/edit/files/key/'
+        r'(?P<keyid>\d*[1-9]\d*)?/?$', views.manage_keyset, name='managekey'),
     url(r'^product/(?P<id>\d*[1-9]\d*)/edit/keys/upload/$',
         views.upload_file_noapi, name='uploadfilenoapi'),
     url(r'^shop/(?P<user>[A-Za-z0-9\-\_]{1,150})/$', views.shop, name='shop'),

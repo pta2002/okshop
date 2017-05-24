@@ -65,3 +65,34 @@ class ReviewForm(forms.Form):
         if not 1 <= data['rating'] <= 5:
             raise forms.ValidationError("Rating should be between 1 and 5")
         return int(data['rating'])
+
+
+class KeyForm(forms.Form):
+    title = forms.CharField(max_length=200)
+    description = forms.CharField(widget=forms.Textarea(attrs={'class': 'vresize'}))
+    keys = forms.CharField(required=False, label="Keys to add",
+                           widget=forms.Textarea(attrs={'class': 'vresize'}),
+                           help_text='One key per line. '
+                                     'You won\'t be able to remove these')
+    is_link = forms.BooleanField(label="Are these keys links?",
+                                 help_text='Setting this will make it so that'
+                                           ' the keys are clickable',
+                                 required=False)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.helper = FormHelper()
+        self.helper.layout = Layout(
+            Div(
+                'title',
+                'description',
+                'keys',
+                'is_link',
+                css_class='panel-body'
+            ),
+            Div(
+                Submit('submit', 'Add keys'),
+                css_class='panel-footer'
+            )
+        )
