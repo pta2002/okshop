@@ -38,7 +38,7 @@ clicking the following link:
 https://%s%s""" % (user.username, getattr(settings, 'URL', 'okcart.net'),
                    reverse('shop:verifyemail', kwargs={'uuid': v.verify_url}))
         send_mail('Complete your OKShop registration!', body,
-                  'no-reply@okcash.net', [user.email])
+                  'no-reply@okcart.net', [user.email])
 
 
 class Product(models.Model):
