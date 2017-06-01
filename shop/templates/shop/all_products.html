@@ -1,0 +1,38 @@
+{% extends "shop/base.html" %}
+{% block title %}All products{% endblock %}
+{% block body %}
+<h1>All products</h1>
+
+{% if products %}
+{% for product in products %}
+<div class="panel panel-default">
+  <div class="panel-body">
+    <div class="row">
+      <div class="col-md-3">
+	<img src="{{ product.productimage_set.first.image.url }}" alt="" class="img-responsive">
+      </div>
+      <div class="col-md-9">
+	<div class="row">
+	  <div class="col-md-9">
+	    <div>
+	    <a class="cart-product-name" href="{% url 'shop:viewproduct' product.id %}">{{ product.product_name }}</a>
+	    </div>
+	    <p>Sold by <a href="{% url 'shop:shop' product.seller.username %}">{{ product.seller }}</a></p>
+	    {% if not product.in_stock %}
+	    <div class="error">Out of stock</div>
+	    {% endif %}
+	    <p>Rating: {% if product.review_set.all.count == 0 %}No reviews{% else %}{{ product.get_rating }}/5{% endif %}</p>
+	  </div>
+	  <div class="col-md-3">
+	    Price: {% if product.free %}Free!{% else %}{{ product.price|floatformat }} {{ product.price_currency }}{% endif %}
+	    </div>
+	</div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endfor %}
+{% else %}
+<p>No products :(</p>
+{% endif %}
+{% endblock %}

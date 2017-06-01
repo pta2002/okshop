@@ -1166,3 +1166,51 @@ def search(request, page=0):
     search_set = SearchQuerySet().filter(content=query)
 
     return render(request, 'shop/search_results.html', {'results': search_set, 'query': query})
+
+def view_all(request, page=0):
+    products = Product.objects.filter(approved=True, removed=False).order_by('-date')
+
+    return render(request, 'shop/all_products.html', {'products': products})
+
+
+@login_required
+def manage_keyset(request, id, keyid=None):
+    context = {}
+
+    if keyid is not None:
+        keyset = get_object_or_404(DigitalKeySet, id=keyid,
+                                   product__seller=request.user)
+        context['keyset'] = keyset
+
+    if request.method == 'POST':
+        form = KeyForm(request.POST)
+
+        if form.is_valid():
+            if keyid is None:
+                keyset = DigitalKeySet(
+                    name=form.cleaned_data['title'],
+                    description=form.cleaned_data['description'],
+                    is_link=form.cleaned_data['is_link'],
+                    product_id=id
+                )
+            keyset.save()
+            keys = []
+            for key in form.cleaned_data['keys'].strip().split('\n'):
+                keys.append(DigitalKey(keyset=keyset, key=key))
+            DigitalKey.objects.bulk_create(keys)
+            messages.success(request, "Successfully added %d key%s" %
+                             (len(keys), 's' if len(keys) != 1 else ''))
+            return redirect('shop:managekey', id=id, keyid=keyset.id)
+
+    else:
+        if keyid is None:
+            form = KeyForm()
+        else:
+            form = KeyForm({
+                'title': keyset.name,
+                'description': keyset.description
+            })
+
+    context['form'] = form
+
+    return render(request, 'shop/managekey.html', context)
