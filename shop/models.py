@@ -416,11 +416,11 @@ class Wallet(models.Model):
                       self.get_balance() - ammount)
                 errors.append('Not enough funds!')
         else:
-            if self.get_balance() - ammount - 1 >= 0:
-                cm.settxfee(1)
+            if self.get_balance() - ammount - 0.1 >= 0:
+                cm.settxfee(0.1)
                 try:
                     cm.sendtoaddress(address, ammount)
-                    self.redeemed += ammount + 1
+                    self.redeemed += ammount + 0.1
                     self.save()
                 except JSONRPCException:
                     errors.append("Invalid ammount")
