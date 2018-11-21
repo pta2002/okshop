@@ -1,5 +1,5 @@
 <!--
-		##########
+    ##########
    #          #
    #    OK    #
    #          #
@@ -32,9 +32,17 @@ Yes, that's the best I can do, sorry ¯\_(ツ)_/¯
 					<span class="icon-bar"></span>
 			   		<span class="icon-bar"></span>
 			    </button>
-				<a href="{% url 'shop:homepage' %}" class="navbar-brand">OKCart</a>
+				<a href="{% url 'shop:homepage' %}" class="navbar-brand">OKCart<sup><small>BETA</small></sup></a>
 			</div>
 			<div class="collapse navbar-collapse" id="navbar-collapse-1">
+                <form action="{% url 'shop:search' %}" method="get" class="navbar-form navbar-left search-bar">
+                    <div class="form-group">
+                        <div class="input-group">
+                            <input type="text" value="{{query}}" class="form-control" placeholder="Search" name="query">
+                            <a class="input-group-addon btn btn-default">Search</a>
+                        </div>
+                    </div>
+                </form>
 				<ul class="nav navbar-nav navbar-right">
 					{% if user.is_authenticated %}
 					<li class="dropdown">
@@ -76,6 +84,16 @@ Yes, that's the best I can do, sorry ¯\_(ツ)_/¯
 		</div>
 		{% block modals %}{% endblock %}
 	</div>
+    <footer class="footer">
+        <div class="container">
+            <p class="text-muted">
+                OKCart is open source software. The code is available on <a href="https://github.com/okcashpro/okshop">GitHub</a>.
+            </p>
+            <p class="text-muted">
+                Report bugs on <a href="https://github.com/okcashpro/okshop/issues">Github Issues</a>. For security bugs, email <a href="mailto:pta2002@pta2002.com">pta2002@pta2002.com</a>.
+            </p>
+        </div>       
+    </footer>
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
 	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
 	<script>

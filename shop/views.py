@@ -16,58 +16,40 @@ from decimal import Decimal
 from sendfile import sendfile
 from .models import *
 from .decorators import *
+from .forms import *
 from . import cryptomethods as cm
 import re
 import json
 import qrcode
 import pyotp
 from PIL import Image
+from haystack.query import SearchQuerySet
 
 
 # Create your views here.
 def view_product(request, id):
-    product = get_object_or_404(Product, id=id)
+    product = get_object_or_404(Product, id=id, approved=True)
 
 
     if request.method == 'POST':
-        errors = []
-
-        print(":D")
-
+        form = ReviewForm(request.POST)
         if not request.user.is_authenticated():
             return redirect(reverse('shop:login') + '?next=%s' % request.path)
 
         if not product.is_owned_by(request.user):
-            errors.append("You don't own this product!")
-
-        if 'rating' not in request.POST:
-            errors.append('Rating is a required field')
-
-        if len(request.POST.get('review', '').strip()) == 0:
-            errors.append('Review is a required field')
-
-        if len(request.POST.get('title', '')) > 150:
-            errors.append('Title must be at most 150 characters')
-
-        try:
-            if not 0 < int(request.POST.get('rating')) <= 5:
-                errors.append('Rating must be between 1 and 5')
-        except ValueError:
-            errors.append('Invalid rating')
-
-        if not errors:
+            messages.warning(request, "You don't own this product.")
+        elif form.is_valid():
             try:
                 review = product.review_set.get(user=request.user)
             except ObjectDoesNotExist:
                 review = Review(product=product, user=request.user)
 
-            review.title = request.POST.get('title', '')
-            review.review = request.POST.get('review').strip()
-            review.rating = request.POST.get('rating')
+            review.title = form.cleaned_data['title']
+            review.review = form.cleaned_data['review']
+            review.rating = form.cleaned_data['rating']
             review.save()
-
-        for error in errors:
-            messages.warning(request, error)
+    else:
+        form = ReviewForm()
 
     reviews = sorted(product.review_set.all(), key=lambda t: -t.get_ordering())
     for review in reviews:
@@ -84,6 +66,7 @@ def view_product(request, id):
 
         context = {
             'reviews': reviews,
+            'form': form,
             'product': product,
             'incart': cart.in_cart(product),
             'can_buy': request.user.userextra.can_purchase_item(product),
@@ -114,7 +97,7 @@ def review_delete(request, id, reviewid):
     return redirect(request.GET.get('next', reverse('shop:viewproduct',
                                                     kwargs={'id':
                                                             review.product.id}
-                                                    )))
+                                                   )))
 
 
 @login_required
@@ -125,7 +108,7 @@ def view_cart(request):
 @login_required
 def add_to_cart(request, id):
     cart = request.user.cart
-    product = get_object_or_404(Product, id=id)
+    product = get_object_or_404(Product, id=id, approved=True, removed=False)
     if request.user.userextra.can_purchase_item(product):
         if product.in_stock():
             if cart.in_cart(product):
@@ -213,46 +196,23 @@ def validateEmail(email):
 
 def register_view(request):
     if request.method == 'POST':
-        if 'username' in request.POST and \
-          'password' in request.POST and \
-          'passwordconfirm' in request.POST and \
-          'email' in request.POST:
-            username = request.POST['username'].strip()
-            password = request.POST['password']
-            passwordconfirm = request.POST['passwordconfirm']
-            email = request.POST['email'].strip()
+        form = RegisterForm(request.POST)
+        if form.is_valid():
+            messages.success(request,
+                             'User registered! Please check your email ' +
+                             'to complete your verification.')
+            u = User.objects.create_user(form.cleaned_data['username'],
+                                         form.cleaned_data['email'],
+                                         form.cleaned_data['password'])
+            send_confirmation_email(u)
+            if 'next' in request.GET and request.GET['next'] != '':
+                return redirect(request.GET['next'])
+            else:
+                return redirect('shop:login')
+    else:
+        form = RegisterForm()
 
-            errors = []
-            if re.match('^[\w-]+$', username) is None or \
-                    len(username) > 150 or \
-                    username == '':
-                errors.append('Invalid username!')
-            if len(password) < 8:
-                errors.append("Password must be at least 8 characters long")
-            if password != passwordconfirm:
-                errors.append('Passwords don\'t match')
-            if not validateEmail(email):
-                errors.append('Invalid email!')
-            if User.objects.filter(username=username).count() > 0:
-                errors.append('Username is already in use!')
-            if User.objects.filter(email=email).count() > 0:
-                errors.append('Email is already in use!')
-
-            for e in errors:
-                messages.warning(request, e)
-
-            if len(errors) == 0:
-                messages.success(request,
-                                 'User registered! Please check your email ' +
-                                 'to complete your verification.')
-                u = User.objects.create_user(username, email, password)
-                send_confirmation_email(u)
-                if 'next' in request.GET and request.GET['next'] != '':
-                    return redirect(request.GET['next'])
-                else:
-                    return redirect('shop:login')
-
-    return render(request, 'shop/register.html')
+    return render(request, 'shop/register.html', {'form': form})
 
 
 def logoutview(request):
@@ -285,7 +245,7 @@ def verify_email(request, uuid):
 @auth_required(forid='wallets')
 def wallets(request):
     wallets = request.user.wallet_set.filter(active=True)
-    return render(request, 'shop/wallets.html',  {'wallets': wallets})
+    return render(request, 'shop/wallets.html', {'wallets': wallets})
 
 
 @login_required
@@ -410,8 +370,8 @@ def checkout(request):
 
             if chkout.step == 0:
                 if request.POST.get('shipping', False) and \
-                        request.user.physicaladdress_set.filter(
-                        id=request.POST.get('shipping', 0)).count() >= 1:
+                   request.user.physicaladdress_set \
+                   .filter(id=request.POST.get('shipping', 0)).count() >= 1:
                     chkout.shipping = request.user.physicaladdress_set.get(
                         id=request.POST.get('shipping', 0))
                     chkout.step = 1
@@ -455,9 +415,9 @@ def checkout(request):
                 else:
                     messages.warning(request,
                                      "Please fill out all required fields")
-            elif chkout.step == 1 and (
-             not chkout.cart.has_physical_items() or
-             hasattr(chkout, 'shipping')):
+            elif chkout.step == 1 and \
+                 (not chkout.cart.has_physical_items() or
+                  hasattr(chkout, 'shipping')):
                 if request.POST.get('address', False) and \
                  request.user.wallet_set.filter(id=request.POST.get('address',
                                                                     0)) \
@@ -465,9 +425,9 @@ def checkout(request):
                     chkout.wallet = request.user.wallet_set.get(
                         id=request.POST.get('address', 0))
                     chkout.step = 2
-            elif chkout.step == 2 and 'confirm' in request.POST and (
-              not chkout.cart.has_physical_items() or
-              hasattr(chkout, 'shipping')) and hasattr(chkout, 'wallet'):
+            elif chkout.step == 2 and 'confirm' in request.POST and \
+                 (not chkout.cart.has_physical_items() or
+                  hasattr(chkout, 'shipping')) and hasattr(chkout, 'wallet'):
                 p = chkout.buy()
                 chkout.cart.clear()
                 messages.success(request, 'Paid!')
@@ -611,10 +571,12 @@ class HomeSection():
 def homepage(request):
     sections = []
 
-    new_section = HomeSection(lambda: Product.objects.all().order_by('-date'),
-                              'Recently added')
+    new_section = HomeSection(
+        lambda: Product.objects.filter(removed=False, approved=True)
+        .order_by('-date'),
+        'Recently added')
     sections.append(new_section)
-    
+
     return render(request, 'shop/frontpage.html', {'home_sections': sections})
 
 
@@ -640,8 +602,8 @@ def get_key(request):
                     })
             else:
                 return JsonResponse(
-                    {'errors': "The seller ran out of keys." +
-                     "Please try again later!"})
+                    {'errors': "The seller ran out of keys."
+                               "Please try again later!"})
         except ObjectDoesNotExist:
             return JsonResponse({'errors': "Can't find key"})
 
@@ -723,7 +685,7 @@ def manage_order(request, id):
                                    update=request.POST.get('longupdate', '')
                                    .strip(),
                                    done=request.POST.get('done', 'off') == 'on'
-                                   )
+                                  )
                 u.save()
                 messages.success(request, "Successfully updated")
                 if not u.done:
@@ -758,7 +720,7 @@ Thanks for buying with OKCart!""" % (order.purchase.by, order.quantity,
 
     updates = order.shippingupdate_set.all().order_by('-date')
     return render(request, 'shop/manageorder.html', {'order': order,
-                  'updates': updates})
+                                                     'updates': updates})
 
 
 def qr_code(request):
@@ -790,7 +752,7 @@ def google_settings(request):
                     request.user.userextra.save()
                     messages.success(request,
                                      "Successfully added google authenticator!"
-                                     )
+                                    )
                 else:
                     msg = "Your code doesn't seem right... Doule check it!"
                     messages.warning(request, msg)
@@ -815,7 +777,7 @@ def sell_new_product(request):
 
         if request.POST.get('product-name', '').strip() == '':
             errors.append("Product name can't be empty!")
-        if 'unlimited' in request.POST:
+        if 'unlimited' not in request.POST:
             try:
                 stock = int(request.POST.get('stock', 0))
                 if stock < 0:
@@ -873,14 +835,15 @@ def sell_new_product(request):
             p = Product(
                 product_name=request.POST.get('product-name', '').strip(),
                 product_description=request.POST.get('description', '')
-                                    .strip(),
+                .strip(),
                 price=Decimal(request.POST.get('price', 0)),
                 price_currency=request.POST.get('currency', 'OK').strip(),
                 physical='is-physical' in request.POST,
                 stock=int(request.POST.get('stock', 0)),
                 seller=request.user,
                 free_shipping='free-shipping' in request.POST,
-                unlimited_stock='unlimited' in request.POST
+                unlimited_stock='unlimited' in request.POST,
+                delete_on_over='delete-on-over' in request.POST
                 )
             p.save()
             for i in imgs:
@@ -919,7 +882,7 @@ def upload_pic(request):
                                                seller=request.user)
             p.save()
             response['images'].append({'url': p.image.url, 'id': p.id,
-                                      'delete': p.uuid})
+                                       'delete': p.uuid})
         except AttributeError:
             pass
     return JsonResponse(response)
@@ -929,7 +892,7 @@ def upload_pic(request):
 @login_required
 def delete_pic(request, uuid):
     pic = get_object_or_404(ProductImage, uuid=uuid)
-    if pic.prodcut is None or pic.product.seller == request.user:
+    if pic.product is None or pic.product.seller == request.user:
         pic.delete()
         return JsonResponse({'status': 'ok'})
     else:
@@ -954,8 +917,8 @@ def change_password(request):
             errors.append("Passwords don't match!")
 
         if request.user.userextra.authenticator_verified:
-            if not request.user.userextra.verify_2fa(
-               request.POST.get('2facode', '')):
+            if (not request.user.userextra.verify_2fa(
+                    request.POST.get('2facode', ''))):
                 errors.append("Google auth code is incorrect")
 
         if not errors:
@@ -1145,7 +1108,7 @@ def upload_file_noapi(request, id):
     else:
         if 'file' not in request.FILES:
             messages.warning(request, "File is required")
-        if not (0 < len(request.POST.get('name', '')) <= 200):
+        if not 0 < len(request.POST.get('name', '')) <= 200:
             messages.warning(request,
                              "Name must be between 1 and 200 characters")
     print(request.FILES)
@@ -1196,3 +1159,58 @@ def toggle_vote(request, id, vote):
         return redirect(request.GET['next'])
     else:
         return redirect(review.product)
+
+def search(request, page=0):
+    query = request.GET.get('query', '')
+
+    search_set = SearchQuerySet().filter(content=query)
+
+    return render(request, 'shop/search_results.html', {'results': search_set, 'query': query})
+
+def view_all(request, page=0):
+    products = Product.objects.filter(approved=True, removed=False).order_by('-date')
+
+    return render(request, 'shop/all_products.html', {'products': products})
+
+
+@login_required
+def manage_keyset(request, id, keyid=None):
+    context = {}
+
+    if keyid is not None:
+        keyset = get_object_or_404(DigitalKeySet, id=keyid,
+                                   product__seller=request.user)
+        context['keyset'] = keyset
+
+    if request.method == 'POST':
+        form = KeyForm(request.POST)
+
+        if form.is_valid():
+            if keyid is None:
+                keyset = DigitalKeySet(
+                    name=form.cleaned_data['title'],
+                    description=form.cleaned_data['description'],
+                    is_link=form.cleaned_data['is_link'],
+                    product_id=id
+                )
+            keyset.save()
+            keys = []
+            for key in form.cleaned_data['keys'].strip().split('\n'):
+                keys.append(DigitalKey(keyset=keyset, key=key))
+            DigitalKey.objects.bulk_create(keys)
+            messages.success(request, "Successfully added %d key%s" %
+                             (len(keys), 's' if len(keys) != 1 else ''))
+            return redirect('shop:managekey', id=id, keyid=keyset.id)
+
+    else:
+        if keyid is None:
+            form = KeyForm()
+        else:
+            form = KeyForm({
+                'title': keyset.name,
+                'description': keyset.description
+            })
+
+    context['form'] = form
+
+    return render(request, 'shop/managekey.html', context)

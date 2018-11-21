@@ -34,6 +34,29 @@
 		{% endif %}
 	</div>
 </div>
+<div class="panel panel-default">
+	<div class="panel-heading">
+		<h4>Keys</h4>
+	</div>
+	<div class="panel-body">
+		<p>You can use this to distribute a different key to each person</p>
+		{% if product.digitalkeyset_set %}
+		<div class="row">
+			<div class="col-sm-10"><strong>Keyset name</strong></div>
+			<div class="col-sm-2"><strong>Keys remaining</strong></div>
+		</div>
+		{% for keyset in product.digitalkeyset_set.all %}
+		<div class="row">
+			<div class="col-sm-10"><a href="{% url 'shop:managekey' product.id keyset.id %}">{{ keyset.name }}</a></div>
+			<div class="col-sm-2">{{ keyset.get_stock }}</div>
+		</div>
+		{% endfor %}
+		{% else %}
+		<p>There are no key sets!</p>
+		{% endif %}
+		<a href="{% url 'shop:managekey' product.id %}" class="btn btn-block btn-primary">Create keyset</a>
+	</div>
+</div>
 {% endblock %}
 {% block modals %}
 {% for file in product.digitalfile_set.all %}

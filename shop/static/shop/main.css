@@ -45,6 +45,22 @@
     margin-bottom: 0.5em;
 }
 
+.search-bar input,
+.search-bar .btn {
+    background: #222;
+    border-color: #444;
+    color: white;
+}
+
+.search-bar .btn {
+    background: #333;
+    color: white;
+}
+
+.search-bar .btn:hover {
+    background: #2f2f2f;
+}
+
 /* -----------------------------------------------
  * Timeline
  * --------------------------------------------- */
@@ -229,4 +245,22 @@
     .timeline > li.timeline-inverted > .timeline-badge {
         left: 28px;
     }
+}
+
+.footer {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    min-height: 60px;
+    background-color: #222;
+    padding: 10px;
+}
+
+html {
+    position: relative;
+    min-height: 100%;
+}
+
+body {
+    margin-bottom: 100px;
 }

@@ -35,6 +35,8 @@ ALLOWED_HOSTS = []
 INSTALLED_APPS = [
     'shop.apps.ShopConfig',
     'django_countries',
+    'crispy_forms',
+    'haystack',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -132,3 +134,10 @@ RPC_PORT = 6969
 
 # SENDFILE SETTINGS
 SENDFILE_BACKEND = 'sendfile.backends.development'
+
+HAYSTACK_CONNECTIONS = {
+    'default': {
+        'ENGINE': 'haystack.backends.whoosh_backend.WhooshEngine',
+        'PATH': os.path.join(os.path.dirname(__file__), 'whoosh_index'),
+    },
+}

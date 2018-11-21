@@ -38,7 +38,7 @@ clicking the following link:
 https://%s%s""" % (user.username, getattr(settings, 'URL', 'okcart.net'),
                    reverse('shop:verifyemail', kwargs={'uuid': v.verify_url}))
         send_mail('Complete your OKShop registration!', body,
-                  'no-reply@okcash.net', [user.email])
+                  'no-reply@okcart.net', [user.email])
 
 
 class Product(models.Model):
@@ -47,9 +47,9 @@ class Product(models.Model):
     product_description = models.TextField()
     approved = models.BooleanField(default=True)
 
-    price = models.DecimalField(max_digits=2**16, decimal_places=8)
+    price = models.DecimalField(max_digits=1000, decimal_places=8)
     price_currency = models.CharField(max_length=16, default='OK')
-    cached_rate = models.DecimalField(blank=True, null=True, max_digits=2**16,
+    cached_rate = models.DecimalField(blank=True, null=True, max_digits=1000,
                                       decimal_places=8)
     rate_lastupdated = models.DateTimeField(default=timezone.now)
 
@@ -63,9 +63,9 @@ class Product(models.Model):
     free_shipping = models.BooleanField(default=False)
     worldwide_shipping = models.BooleanField(default=False)
     ships_from = CountryField(null=True, blank=True)
-    local_price = models.DecimalField(max_digits=2**16, decimal_places=8,
+    local_price = models.DecimalField(max_digits=1000, decimal_places=8,
                                       default=0)
-    outside_price = models.DecimalField(max_digits=2**16, decimal_places=8,
+    outside_price = models.DecimalField(max_digits=1000, decimal_places=8,
                                         default=0)
 
     redeeming_instructions = models.TextField(default='', blank=True,
@@ -73,6 +73,8 @@ class Product(models.Model):
     unlimited_stock = models.BooleanField(default=False)
 
     can_purchase_multiple = models.BooleanField(default=True)
+    delete_on_over = models.BooleanField(default=False)
+    removed = models.BooleanField(default=False)
 
     def __str__(self):
         return self.product_name
@@ -103,7 +105,7 @@ class Product(models.Model):
                  >= timezone.timedelta(hours=1):
                     self.rate_lastupdated = timezone.now()
                     self.cached_rate = Decimal(cryptonator.get_exchange_rate(
-                                                self.price_currency, 'ok'))
+                        self.price_currency, 'ok'))
                     self.save()
                 return Decimal(self.cached_rate) * Decimal(self.local_price)
             return self.local_price
@@ -113,7 +115,7 @@ class Product(models.Model):
              >= timezone.timedelta(hours=1):
                 self.rate_lastupdated = timezone.now()
                 self.cached_rate = Decimal(cryptonator.get_exchange_rate(
-                                            self.price_currency, 'ok'))
+                    self.price_currency, 'ok'))
                 self.save()
             return Decimal(self.cached_rate) * Decimal(self.outside_price)
         return self.outside_price
@@ -128,25 +130,27 @@ class Product(models.Model):
             us = UserShop(user=self.seller, pay_to_address=a)
             us.save()
         if (self.stock >= ammount or self.unlimited_stock) and \
-                self.ships_to(address):
+                self.ships_to(address) and not self.removed:
             if getattr(settings, 'FEE_ADDRESS', '') != '':
                 wallet.send_to(
                     getattr(settings, 'FEE_ADDRESS', ''),
                     (self.get_shipping_price(address)
-                        + self.get_item_price()*ammount) * Decimal(0.005))
+                     + self.get_item_price()*ammount) * Decimal(0.005))
                 wallet.send_to(
                     self.seller.usershop.pay_to_address.address,
                     (self.get_shipping_price(address)
-                        + self.get_item_price()*ammount) * Decimal(0.995))
+                     + self.get_item_price()*ammount) * Decimal(0.995))
                 fee = 0.995
             else:
                 wallet.send_to(
                     self.seller.usershop.pay_to_address.address,
                     (self.get_shipping_price(address)
-                        + self.get_item_price() * Decimal(ammount)))
+                     + self.get_item_price() * Decimal(ammount)))
                 fee = 1
             if not self.unlimited_stock:
                 self.stock -= ammount
+                if self.delete_on_over and self.stock == 0:
+                    self.removed = True
             self.save()
             send_mail("Someone bought one of your items!", """Hello %s,
 
@@ -181,7 +185,7 @@ Thanks for selling with OKCart!""" % (self.seller.username,
              >= timezone.timedelta(hours=1):
                 self.rate_lastupdated = timezone.now()
                 self.cached_rate = Decimal(cryptonator.get_exchange_rate(
-                                           self.price_currency, 'ok'))
+                    self.price_currency, 'ok'))
                 self.save()
             return Decimal(self.cached_rate) * Decimal(self.price)
         return self.price
@@ -285,7 +289,7 @@ class CartEntry(models.Model):
 
 class VerifyEmail(models.Model):
     user = models.ForeignKey(User)
-    verify_url = models.CharField(max_length=32, default=uuid.uuid4,
+    verify_url = models.CharField(max_length=36, default=uuid.uuid4,
                                   unique=True)
     sent = models.DateTimeField(default=timezone.now)
     valid = models.BooleanField(default=True)
@@ -363,21 +367,21 @@ class UserExtra(models.Model):
 
     def clear_cart(self):
         if hasattr(self, 'cart'):
-            self.cart.clear()
+            self.user.cart.clear()
 
     def add_to_cart(self, product, quantity=1, gift=False):
-        if not hasattr(self, 'cart'):
-            self.cart = Cart(user=self.user)
-            self.cart.save()
-        if self.cart.in_cart(product):
-            self.cart.cartentry_set.get(product=product).delete()
-        ce = CartEntry(cart=self.cart, product=product, quantity=quantity,
+        if not hasattr(self.user, 'cart'):
+            self.user.cart = Cart(user=self.user)
+            self.user.cart.save()
+        if self.user.cart.in_cart(product):
+            self.user.cart.cartentry_set.get(product=product).delete()
+        ce = CartEntry(cart=self.user.cart, product=product, quantity=quantity,
                        gift=gift)
         ce.save()
 
 
 class Wallet(models.Model):
-    redeemed = models.DecimalField(max_digits=2**16, decimal_places=8,
+    redeemed = models.DecimalField(max_digits=1000, decimal_places=8,
                                    default=0)
     user = models.ForeignKey(User)
     label = models.CharField(max_length=30)
@@ -412,11 +416,11 @@ class Wallet(models.Model):
                       self.get_balance() - ammount)
                 errors.append('Not enough funds!')
         else:
-            if self.get_balance() - ammount - 1 >= 0:
-                cm.settxfee(1)
+            if self.get_balance() - ammount - 0.1 >= 0:
+                cm.settxfee(0.1)
                 try:
                     cm.sendtoaddress(address, ammount)
-                    self.redeemed += ammount + 1
+                    self.redeemed += ammount + 0.1
                     self.save()
                 except JSONRPCException:
                     errors.append("Invalid ammount")
@@ -449,7 +453,7 @@ class PhysicalAddress(models.Model):
 class Purchase(models.Model):
     by = models.ForeignKey(User)
     date = models.DateTimeField(default=timezone.now)
-    uuid = models.CharField(max_length=32, default=uuid.uuid4, unique=True)
+    uuid = models.CharField(max_length=36, default=uuid.uuid4, unique=True)
     notes = models.TextField(blank=True, null=True)
     shipped_to = models.ForeignKey(PhysicalAddress, blank=True, null=True)
 
@@ -485,14 +489,14 @@ class Purchase(models.Model):
 
 class PurchaseItem(models.Model):
     product = models.ForeignKey(Product)
-    price = models.DecimalField(max_digits=2**16, decimal_places=8)
+    price = models.DecimalField(max_digits=1000, decimal_places=8)
     quantity = models.IntegerField(default=1)
     gift = models.BooleanField(default=False)
     purchase = models.ForeignKey(Purchase)
     address = models.ForeignKey(PhysicalAddress, blank=True, null=True)
-    shipping_price = models.DecimalField(max_digits=2**16, decimal_places=8,
+    shipping_price = models.DecimalField(max_digits=1000, decimal_places=8,
                                          default=0)
-    fee = models.DecimalField(max_digits=2**16, decimal_places=8,
+    fee = models.DecimalField(max_digits=1000, decimal_places=8,
                               default=0.995)
 
     def done(self):
@@ -514,10 +518,10 @@ def in_ten_mins():
 
 class Authorization(models.Model):
     expires = models.DateTimeField(default=in_ten_mins)
-    code = models.CharField(max_length=32, default=uuid.uuid4)
+    code = models.CharField(max_length=36, default=uuid.uuid4)
     user = models.ForeignKey(User)
     valid = models.BooleanField(default=True)
-    allowto = models.CharField(max_length=32)
+    allowto = models.CharField(max_length=36)
 
     def __str__(self):
         return '%s for %s' % (self.allowto, self.user.username)
@@ -530,15 +534,15 @@ class Authorization(models.Model):
 
 
 class Checkout(models.Model):
-    uuid = models.CharField(default=uuid.uuid4, max_length=32)
+    uuid = models.CharField(default=uuid.uuid4, max_length=36)
     step = models.IntegerField(default=0)
     cart = models.ForeignKey(Cart)
     user = models.ForeignKey(User)
     wallet = models.ForeignKey(Wallet, blank=True, null=True)
     shipping = models.ForeignKey(PhysicalAddress, blank=True, null=True)
-    cached_price = models.DecimalField(max_digits=2**16, decimal_places=8,
+    cached_price = models.DecimalField(max_digits=1000, decimal_places=8,
                                        blank=True, null=True)
-    cached_shipping = models.DecimalField(max_digits=2**16, decimal_places=8,
+    cached_shipping = models.DecimalField(max_digits=1000, decimal_places=8,
                                           blank=True, null=True)
 
     def buy(self):
@@ -573,7 +577,7 @@ Thanks for buying with OKCart!""" % (self.user.username,
         if not self.cached_shipping:
             s = 0
             for item in self.cart.cartentry_set.filter(
-              product__stock__gte=F('quantity'), product__physical=True):
+                    product__stock__gte=F('quantity'), product__physical=True):
                 if item.product.ships_to(self.shipping) and \
                  self.user.userextra.can_purchase_item(item.product):
                     s += item.product.get_shipping_price(self.shipping)

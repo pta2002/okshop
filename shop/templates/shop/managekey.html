@@ -1,0 +1,9 @@
+{% extends "shop/base.html" %}
+{% block title %}Manage keyset{% endblock %}
+{% block body %}
+<h1>{% if keyset %}Edit {{ keyset.name }}{% else %}Create keyset{% endif %}</h1>
+<div class="panel panel-default">
+    {% load crispy_forms_tags %}
+    {% crispy form %}
+</div>
+{% endblock %}

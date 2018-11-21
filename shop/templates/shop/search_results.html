@@ -1,0 +1,39 @@
+{% extends "shop/base.html" %}
+
+{% block title %}Search results{% endblock %}
+{% block body %}
+<h1>{{ results.count }} result{{ results.count|pluralize }} for "{{ query }}"</h1>
+
+{% if results %}
+{% for result in results %}
+<div class="panel panel-default">
+  <div class="panel-body">
+    <div class="row">
+      <div class="col-md-3">
+	<img src="{{ result.object.productimage_set.first.image.url }}" alt="" class="img-responsive">
+      </div>
+      <div class="col-md-9">
+	<div class="row">
+	  <div class="col-md-9">
+	    <div>
+	    <a class="cart-product-name" href="{% url 'shop:viewproduct' result.object.id %}">{{ result.product_name }}</a>
+	    </div>
+	    <p>Sold by <a href="{% url 'shop:shop' result.object.seller.username %}">{{ result.object.seller }}</a></p>
+	    {% if not result.object.in_stock %}
+	    <div class="error">Out of stock</div>
+	    {% endif %}
+	    <p>Rating: {% if result.object.review_set.all.count == 0 %}No reviews{% else %}{{ result.object.get_rating }}/5{% endif %}</p>
+	  </div>
+	  <div class="col-md-3">
+	    Price: {% if result.object.free %}Free!{% else %}{{ result.object.price|floatformat }} {{ result.object.price_currency }}{% endif %}
+	    </div>
+	</div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endfor %}
+{% else %}
+<p>No results for "{{query}}"... Maybe try being clearer?</p>
+{% endif %}
+{% endblock %}
